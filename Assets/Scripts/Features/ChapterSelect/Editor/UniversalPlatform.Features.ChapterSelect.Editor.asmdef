@@ -1,0 +1,22 @@
+{
+    "name": "UniversalPlatform.Features.ChapterSelect.Editor",
+    "rootNamespace": "UniversalPlatform.Features.ChapterSelect.Editor",
+    "references": [
+        "UniversalPlatform.Shared",
+        "UniversalPlatform.Shared.Editor",
+        "UniversalPlatform.Features.ChapterSelect",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
