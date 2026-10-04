@@ -1,0 +1,48 @@
+# ---- Unity ----
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Visual Studio / Rider / VS Code generados por Unity
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Caches de paquetes y assets autogenerados
+[Aa]ssets/AssetStoreTools*
+.consulo/
+crashlytics-build.properties
+
+# Archivos específicos del SO
+.DS_Store
+Thumbs.db
+
+# Build de la app
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Config local de Unity que no debe compartirse
+/[Aa]ssets/[Pp]lugins/[Ee]ditor/JetBrains*
+sysinfo.txt
