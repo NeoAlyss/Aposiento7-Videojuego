@@ -97,7 +97,7 @@ namespace UniversalPlatform.Features.MainMenu.Editor
 
         private static PlaceholderEnConstruccionView CrearPanelTemporal(Transform padre, string nombre, string mensaje)
         {
-            var fondo = SceneBuilderUtils.CrearImage(nombre, padre, new Color(0.02f, 0.03f, 0.10f, 0.92f), null, true);
+            var fondo = SceneBuilderUtils.CrearImage(nombre, padre, new Color(0.12f, 0.01f, 0.02f, 0.92f), null, true);
             SceneBuilderUtils.Estirar(fondo.rectTransform);
             fondo.gameObject.AddComponent<CanvasGroup>();
             var vista = fondo.gameObject.AddComponent<PlaceholderEnConstruccionView>();

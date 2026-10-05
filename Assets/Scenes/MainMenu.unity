@@ -321,7 +321,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.02, g: 0.03, b: 0.1, a: 0.92}
+  m_Color: {r: 0.12, g: 0.01, b: 0.02, a: 0.92}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -639,8 +639,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8d02c175e581e54fa989c14029e2ada, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UniversalPlatform.Shared::UniversalPlatform.Shared.NightBackgroundView
-  _colorCentro: {r: 0.05, g: 0.09, b: 0.3, a: 1}
-  _colorBorde: {r: 0, g: 0, b: 0, a: 1}
+  _colorCentro: {r: 0.86, g: 0.12, b: 0.06, a: 1}
+  _colorBorde: {r: 0.35, g: 0.02, b: 0.03, a: 1}
   _radio: 0.85
   _caida: 1.4
 --- !u!114 &256218746
@@ -2164,7 +2164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.02, g: 0.03, b: 0.1, a: 0.92}
+  m_Color: {r: 0.12, g: 0.01, b: 0.02, a: 0.92}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

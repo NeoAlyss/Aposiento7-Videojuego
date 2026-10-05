@@ -29,10 +29,10 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
         private const float Escala = TamanoReloj / 1024f;
         private const float RadioNumerales = 405f * Escala;   // centro de la banda de números del dibujo
 
-        // El reloj no lleva relleno: líneas y manillas blancas sobre la noche, con un halo suave.
+        // El reloj no lleva relleno: líneas y manillas blancas sobre el fondo escarlata, con un halo suave.
         // Los PNG son blancos, así que estos colores se pueden cambiar en el inspector (Image > Color).
         private static readonly Color Linea = Color.white;
-        private static readonly Color Brillo = new Color(0.75f, 0.85f, 1f, 0.8f);
+        private static readonly Color Brillo = new Color(1f, 0.95f, 0.9f, 0.8f);
 
         // Colores de los numerales.
         // El seleccionado va en blanco pleno (y ClockNumberView lo agranda con _escalaIluminado);
@@ -135,7 +135,7 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             var portal = SceneBuilderUtils.CrearImage("Portal", capa, Color.white, SceneBuilderUtils.SpriteCirculo());
             SceneBuilderUtils.Colocar(portal.rectTransform, Vector2.zero, new Vector2(700f, 700f));
             portal.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            var arte = SceneBuilderUtils.CrearImage("Arte", portal.transform, new Color(0.05f, 0.09f, 0.30f, 1f));
+            var arte = SceneBuilderUtils.CrearImage("Arte", portal.transform, new Color(0.35f, 0.02f, 0.03f, 1f));
             SceneBuilderUtils.Estirar(arte.rectTransform);
 
             var puertaIzq = CrearPuerta(capa, "PuertaIzquierda", true);
@@ -276,7 +276,7 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             var textos = new TextMeshProUGUI[4];
             for (int i = 0; i < 4; i++)
             {
-                var caja = SceneBuilderUtils.CrearImage($"Caja_{campos[i]}", panel, new Color(0.03f, 0.05f, 0.16f, 0.78f));
+                var caja = SceneBuilderUtils.CrearImage($"Caja_{campos[i]}", panel, new Color(0.12f, 0.01f, 0.02f, 0.78f));
                 SceneBuilderUtils.Colocar(caja.rectTransform, new Vector2(0f, ys[i]), new Vector2(460f, 110f));
                 cajas[i] = caja.gameObject.AddComponent<CanvasGroup>();
                 textos[i] = SceneBuilderUtils.CrearTexto("Texto", caja.transform, campos[i], 44f, SceneBuilderUtils.Dorado);
