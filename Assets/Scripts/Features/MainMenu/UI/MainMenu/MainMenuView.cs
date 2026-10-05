@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UniversalPlatform.Features.MainMenu.Domain;
 using UniversalPlatform.Features.MainMenu.Presentation.MainMenu;
+using UniversalPlatform.Features.MainMenu.UI.LoadGame;
 using UniversalPlatform.Features.MainMenu.UI.Placeholders;
 using UniversalPlatform.Shared;
 
@@ -27,6 +28,10 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
         [SerializeField] private PlaceholderEnConstruccionView _panelOpciones;
         [SerializeField] private PlaceholderEnConstruccionView _avisoSinPartida;
 
+        [Header("Submenú de partidas guardadas (velas). Opcional")]
+        [Tooltip("Si está asignado, 'Nueva partida' y 'Cargar partida' pasan por las ranuras de guardado.")]
+        [SerializeField] private LoadGameView _vistaPartidas;
+
         private MainMenuViewModel _viewModel;
         private Action<string> _cargarEscena;
         private Action _salir;
@@ -46,6 +51,8 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
                 _botones[i].Construir(i, AlEntrarBoton, AlSalirBoton, AlClicBoton);
             }
 
+            if (_vistaPartidas != null) _vistaPartidas.AlEntrarAPartida += EntrarAPartida;
+
             _viewModel.OnStateChanged += AplicarEstado;
             _viewModel.OnAccion += ManejarAccion;
             _viewModel.Inicializar();
@@ -53,6 +60,7 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
 
         private void OnDestroy()
         {
+            if (_vistaPartidas != null) _vistaPartidas.AlEntrarAPartida -= EntrarAPartida;
             if (_viewModel == null) return;
             _viewModel.OnStateChanged -= AplicarEstado;
             _viewModel.OnAccion -= ManejarAccion;
@@ -62,11 +70,17 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
             (_panelOpciones != null && _panelOpciones.EstaVisible) ||
             (_avisoSinPartida != null && _avisoSinPartida.EstaVisible);
 
-        private bool Interactuable => _viewModel != null && !_navegando && !ModalAbierto;
+        private bool SubmenuAbierto => _vistaPartidas != null && _vistaPartidas.EstaVisible;
+
+        private bool Interactuable => _viewModel != null && !_navegando && !ModalAbierto && !SubmenuAbierto;
 
         private void Update()
         {
             if (_viewModel == null || _navegando) return;
+
+            // Mientras el submenú de velas está abierto, el input es suyo. Tampoco se procesa la
+            // tecla del mismo frame en que se cerró (Enter sobre "Volver" no debe reabrirlo).
+            if (SubmenuAbierto || (_vistaPartidas != null && _vistaPartidas.FrameUltimoCambio == Time.frameCount)) return;
 
             if (ModalAbierto)
             {
@@ -80,14 +94,37 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
 
             if (MenuInput.Arriba || MenuInput.Izquierda) _viewModel.Mover(-1);
             else if (MenuInput.Abajo || MenuInput.Derecha) _viewModel.Mover(+1);
-            else if (MenuInput.Confirmar) _viewModel.ActivarSeleccion();
+            else if (MenuInput.Confirmar)
+            {
+                var estado = _viewModel.EstadoActual;
+                if (estado != null && estado.HaySeleccion) Activar(estado.IndiceSeleccionado);
+            }
+        }
+
+        /// <summary>
+        /// Con el submenú de velas conectado, "Nueva partida" y "Cargar partida" se resuelven con las
+        /// ranuras de guardado; el resto de las opciones sigue el camino normal del ViewModel.
+        /// </summary>
+        private void Activar(int indice)
+        {
+            if (_vistaPartidas != null && _vistaPartidas.Lista)
+            {
+                if (indice == (int)OpcionMenuPrincipal.NuevaPartida) { _vistaPartidas.SolicitarNuevaPartida(); return; }
+                if (indice == (int)OpcionMenuPrincipal.CargarPartida) { _vistaPartidas.AbrirCarga(); return; }
+            }
+            _viewModel.Activar(indice);
+        }
+
+        private void EntrarAPartida()
+        {
+            if (!_navegando) StartCoroutine(FadeYCargar(_escenaSeleccionCapitulo));
         }
 
         // ---------- mouse (los botones llaman aquí) ----------
 
         private void AlEntrarBoton(int i) { if (Interactuable) _viewModel.Hover(i); }
         private void AlSalirBoton(int i) { if (_viewModel != null) _viewModel.QuitarHover(i); }
-        private void AlClicBoton(int i) { if (Interactuable) _viewModel.Activar(i); }
+        private void AlClicBoton(int i) { if (Interactuable) Activar(i); }
 
         // ---------- reacción al ViewModel ----------
 

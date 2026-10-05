@@ -29,7 +29,7 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
         private const float Escala = TamanoReloj / 1024f;
         private const float RadioNumerales = 405f * Escala;   // centro de la banda de números del dibujo
 
-        // El reloj no lleva relleno: líneas y manillas blancas sobre el fondo escarlata, con un halo suave.
+        // El reloj no lleva relleno: líneas y manillas blancas sobre el fondo oscuro, con un halo suave.
         // Los PNG son blancos, así que estos colores se pueden cambiar en el inspector (Image > Color).
         private static readonly Color Linea = Color.white;
         private static readonly Color Brillo = new Color(1f, 0.95f, 0.9f, 0.8f);
@@ -48,7 +48,8 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             var canvas = SceneBuilderUtils.CrearCanvas("Canvas");
             var raiz = canvas.transform;
 
-            SceneBuilderUtils.CrearAmbienteNocturno(raiz);
+            // Fondo más oscuro que en el menú: detrás van las líneas finas del reloj.
+            SceneBuilderUtils.CrearAmbienteNocturno(raiz, 0.42f);
 
             // ---------- Reloj ----------
             var reloj = SceneBuilderUtils.CrearRect("ClockGroup", raiz);
@@ -213,42 +214,11 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             SceneBuilderUtils.Colocar(img.rectTransform, Vector2.zero, tamano);
         }
 
-        /// <summary>
-        /// Carga un PNG de <see cref="CarpetaArte"/> como Sprite. Si Unity lo importó como textura
-        /// normal (o como sprite múltiple), lo reimporta como sprite único. Devuelve null si no existe.
-        /// </summary>
-        private static Sprite CargarSprite(string nombre)
-        {
-            string ruta = $"{CarpetaArte}/{nombre}.png";
-            var importer = AssetImporter.GetAtPath(ruta) as TextureImporter;
-            if (importer == null)
-            {
-                Debug.LogWarning($"[ChapterSelectSceneBuilder] No se encontró '{ruta}'; se usa arte provisional en su lugar.");
-                return null;
-            }
+        private static Sprite CargarSprite(string nombre) =>
+            SceneBuilderUtils.CargarSprite($"{CarpetaArte}/{nombre}.png");
 
-            if (importer.textureType != TextureImporterType.Sprite
-                || importer.spriteImportMode != SpriteImportMode.Single
-                || importer.mipmapEnabled)
-            {
-                importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
-                importer.alphaIsTransparency = true;
-                importer.mipmapEnabled = false;
-                importer.SaveAndReimport();
-            }
-
-            return AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
-        }
-
-        private static void AsignarColor(Object objetivo, string campo, Color valor)
-        {
-            var so = new SerializedObject(objetivo);
-            var prop = so.FindProperty(campo);
-            if (prop == null) { Debug.LogError($"[ChapterSelectSceneBuilder] No existe el campo '{campo}' en {objetivo.GetType().Name}"); return; }
-            prop.colorValue = valor;
-            so.ApplyModifiedPropertiesWithoutUndo();
-        }
+        private static void AsignarColor(Object objetivo, string campo, Color valor) =>
+            SceneBuilderUtils.AsignarColor(objetivo, campo, valor);
 
         private static RawImage CrearPuerta(Transform padre, string nombre, bool izquierda)
         {
@@ -276,10 +246,10 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             var textos = new TextMeshProUGUI[4];
             for (int i = 0; i < 4; i++)
             {
-                var caja = SceneBuilderUtils.CrearImage($"Caja_{campos[i]}", panel, new Color(0.12f, 0.01f, 0.02f, 0.78f));
+                var caja = SceneBuilderUtils.CrearImage($"Caja_{campos[i]}", panel, new Color(0f, 0f, 0f, 0.8f));
                 SceneBuilderUtils.Colocar(caja.rectTransform, new Vector2(0f, ys[i]), new Vector2(460f, 110f));
                 cajas[i] = caja.gameObject.AddComponent<CanvasGroup>();
-                textos[i] = SceneBuilderUtils.CrearTexto("Texto", caja.transform, campos[i], 44f, SceneBuilderUtils.Dorado);
+                textos[i] = SceneBuilderUtils.CrearTexto("Texto", caja.transform, campos[i], 44f, Color.white);
                 SceneBuilderUtils.Estirar(textos[i].rectTransform);
             }
 

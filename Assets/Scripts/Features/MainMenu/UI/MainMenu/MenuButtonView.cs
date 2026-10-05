@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,9 +7,9 @@ using UnityEngine.UI;
 namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
 {
     /// <summary>
-    /// Botón del menú principal. Normal: gris. Resaltado (mouse encima o seleccionado por teclado):
-    /// se ilumina y hace un pequeño scale.
-    /// - Textos (TMP_Text): se tiñen de gris a color iluminado.
+    /// Botón del menú principal. Normal: blanco atenuado. Resaltado (mouse encima o seleccionado por
+    /// teclado): blanco pleno, más grande y con un resplandor en las letras.
+    /// - Textos (TMP_Text): pasan del color normal al iluminado y ganan brillo (glow del propio texto).
     /// - Imágenes (tu arte): si asignas el material UI_Grayscale pasan de escala de grises a color
     ///   original; si no, se tiñen igual que los textos.
     /// No usa Selectable de Unity: MainMenuViewModel maneja la selección, por eso mouse, flechas y
@@ -17,6 +18,11 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
     public class MenuButtonView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         private static readonly int GrayscaleAmount = Shader.PropertyToID("_GrayscaleAmount");
+        private static readonly int GlowColor = Shader.PropertyToID("_GlowColor");
+        private static readonly int GlowOffset = Shader.PropertyToID("_GlowOffset");
+        private static readonly int GlowInner = Shader.PropertyToID("_GlowInner");
+        private static readonly int GlowOuter = Shader.PropertyToID("_GlowOuter");
+        private static readonly int GlowPower = Shader.PropertyToID("_GlowPower");
 
         [Header("Qué se anima")]
         [SerializeField] private Graphic[] _textos;
@@ -26,9 +32,12 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
         [SerializeField, Range(0f, 1f)] private float _alphaMaximoBrillo = 0.6f;
 
         [Header("Colores y escala")]
-        [SerializeField] private Color _colorGris = new Color(0.45f, 0.45f, 0.5f, 1f);
-        [SerializeField] private Color _colorIluminado = new Color(1f, 0.86f, 0.55f, 1f);
-        [SerializeField] private float _escalaIluminado = 1.1f;
+        [Tooltip("Color sin seleccionar (el nombre viene del diseño original en gris).")]
+        [SerializeField] private Color _colorGris = new Color(1f, 1f, 1f, 0.55f);
+        [SerializeField] private Color _colorIluminado = Color.white;
+        [SerializeField] private float _escalaIluminado = 1.18f;
+        [Tooltip("Resplandor de las letras al seleccionar (0 = sin resplandor). Solo textos TMP.")]
+        [SerializeField, Range(0f, 1f)] private float _brilloTexto = 0.6f;
         [SerializeField] private float _velocidad = 12f;
 
         private int _indice;
@@ -37,6 +46,7 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
         private bool _resaltado;
         private Vector3 _escalaBase;
         private Material[] _instancias;
+        private Material[] _materialesTexto;
 
         private void Awake()
         {
@@ -52,7 +62,33 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
                     _imagenes[i].material = _instancias[i];
                 }
             }
+            PrepararBrilloDeTextos();
             Aplicar(0f);
+        }
+
+        /// <summary>
+        /// Activa el glow del shader de TextMesh Pro en una copia del material de cada texto, para
+        /// poder subirlo y bajarlo sin afectar a los demás textos que usan la misma fuente.
+        /// </summary>
+        private void PrepararBrilloDeTextos()
+        {
+            if (_textos == null || _brilloTexto <= 0f) return;
+            _materialesTexto = new Material[_textos.Length];
+            for (int i = 0; i < _textos.Length; i++)
+            {
+                var tmp = _textos[i] as TMP_Text;
+                if (tmp == null) continue;
+                var material = tmp.fontMaterial;          // instancia propia de este texto
+                if (material == null || !material.HasProperty(GlowPower)) continue;
+                material.EnableKeyword("GLOW_ON");
+                material.SetColor(GlowColor, new Color(1f, 1f, 1f, 0.5f));
+                material.SetFloat(GlowOffset, 0f);
+                material.SetFloat(GlowInner, 0.05f);
+                material.SetFloat(GlowOuter, 0.6f);
+                material.SetFloat(GlowPower, 0f);
+                tmp.UpdateMeshPadding();
+                _materialesTexto[i] = material;
+            }
         }
 
         private void OnDestroy()
@@ -105,6 +141,10 @@ namespace UniversalPlatform.Features.MainMenu.UI.MainMenu
                     }
                 }
             }
+
+            if (_materialesTexto != null)
+                foreach (var m in _materialesTexto)
+                    if (m != null) m.SetFloat(GlowPower, e * _brilloTexto);
 
             if (_brillo != null)
             {

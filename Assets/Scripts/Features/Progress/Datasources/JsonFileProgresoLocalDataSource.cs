@@ -11,9 +11,25 @@ namespace UniversalPlatform.Features.Progress.Datasources
     {
         private readonly string _rutaArchivo;
 
-        public JsonFileProgresoLocalDataSource(string directorioBase)
+        /// <param name="nombreArchivo">Archivo de la ranura; por defecto, el de la ranura 1.</param>
+        public JsonFileProgresoLocalDataSource(string directorioBase, string nombreArchivo = ArchivosRanura.NOMBRE_RANURA_1)
         {
-            _rutaArchivo = Path.Combine(directorioBase, "progreso_partida.json");
+            _rutaArchivo = Path.Combine(directorioBase, nombreArchivo);
+        }
+
+        /// <summary>Momento del último guardado en milisegundos Unix; 0 si no hay archivo o está dañado.</summary>
+        public long LeerGuardadoUnixMs()
+        {
+            try
+            {
+                if (!File.Exists(_rutaArchivo)) return 0L;
+                var dto = JsonUtility.FromJson<ProgresoPartidaDto>(File.ReadAllText(_rutaArchivo));
+                return dto == null ? 0L : dto.timestampModificacion;
+            }
+            catch (Exception)
+            {
+                return 0L;
+            }
         }
 
         public bool Existe() => File.Exists(_rutaArchivo);

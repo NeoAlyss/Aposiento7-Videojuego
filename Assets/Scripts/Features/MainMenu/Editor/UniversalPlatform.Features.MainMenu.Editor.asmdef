@@ -5,6 +5,7 @@
         "UniversalPlatform.Shared",
         "UniversalPlatform.Shared.Editor",
         "UniversalPlatform.Features.MainMenu",
+        "UniversalPlatform.Features.Progress",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],

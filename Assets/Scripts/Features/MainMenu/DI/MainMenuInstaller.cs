@@ -1,6 +1,8 @@
 using UnityEngine;
 using UniversalPlatform.Features.MainMenu.Domain;
+using UniversalPlatform.Features.MainMenu.Presentation.LoadGame;
 using UniversalPlatform.Features.MainMenu.Presentation.MainMenu;
+using UniversalPlatform.Features.MainMenu.UI.LoadGame;
 using UniversalPlatform.Features.MainMenu.UI.MainMenu;
 using UniversalPlatform.Features.Progress.DI;
 using UniversalPlatform.Features.Progress.Domain;
@@ -12,6 +14,8 @@ namespace UniversalPlatform.Features.MainMenu.DI
     public class MainMenuInstaller : MonoBehaviour
     {
         [SerializeField] private MainMenuView _view;
+        [Tooltip("Submenú de velas. Si falta, el menú usa una sola partida guardada como antes.")]
+        [SerializeField] private LoadGameView _vistaPartidas;
 
         private void Awake()
         {
@@ -32,6 +36,15 @@ namespace UniversalPlatform.Features.MainMenu.DI
             else
             {
                 Debug.LogError("[MainMenuInstaller] Falta asignar MainMenuView.");
+            }
+
+            if (_vistaPartidas != null)
+            {
+                var ranuras = ProgresoCompositionRoot.CrearRepositorioRanuras();
+                _vistaPartidas.Construir(new LoadGameViewModel(
+                    new ObtenerRanurasUseCase(ranuras),
+                    new CargarRanuraUseCase(ranuras),
+                    new IniciarPartidaEnRanuraUseCase(ranuras)));
             }
         }
     }

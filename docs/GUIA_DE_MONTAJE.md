@@ -38,7 +38,7 @@ Assets/Scripts/
 
 ## Escena MainMenu
 
-1. Abre una escena vacía y ejecuta **UniversalPlatform > MainMenu > Construir escena**. Genera el Canvas, fondo de noche, haces de luz con polvo, los 4 botones, paneles temporales, fundido y el `MainMenuInstaller`.
+1. Abre una escena vacía y ejecuta **UniversalPlatform > MainMenu > Construir escena**. Genera el Canvas, el fondo de vitrales con polvo, los 4 botones, el submenú de partidas guardadas (velas), paneles temporales, fundido y el `MainMenuInstaller`.
 2. Guarda como `MainMenu`.
 
 **Cambiar al arte propio:** en cada `Btn_*` (componente `MenuButtonView`) arrastra tus sprites a *Imagenes* (y/o deja los textos TMP en *Textos*).
@@ -48,12 +48,22 @@ Assets/Scripts/
 **Controles:** mouse (hover + clic izquierdo), ↑↓←→ y WASD para moverse, Espacio o Enter para activar, Escape cierra los paneles.
 **Flujo:** Nueva partida borra el progreso y va a `ChapterSelect`; Cargar partida va allí solo si hay guardado (si no, muestra un aviso); Opciones abre un panel "En construcción"; Salir cierra el juego.
 
+### Fondo, botones y partidas guardadas (velas)
+
+- **Fondo:** `Assets/Art/Backgrounds/fondo_vitrales.png` (vitrales luminosos, ya desenfocados). Lo usan las dos escenas de menú; qué tan oscuro se ve se ajusta en `Background` > *Image > Color* (más gris = más oscuro). La imagen y la vela se regeneran con `python3 ArteFuente/generar_arte.py`.
+- **Botones:** solo texto. Sin seleccionar van en blanco atenuado; seleccionados, en blanco pleno, más grandes y con resplandor en las letras (`MenuButtonView`: *Color Gris*, *Color Iluminado*, *Escala Iluminado*, *Brillo Texto*).
+- **Partidas guardadas:** hay 3 ranuras (`ReglasRanuras.CANTIDAD`), una vela por ranura dentro del objeto `CargarPartida`. Vela encendida = hay partida; apagada = ranura vacía.
+  - *Nueva partida* usa la primera vela libre y entra directo. Si las tres están ocupadas, abre las velas para elegir cuál reemplazar.
+  - *Cargar partida* abre las velas. Al seleccionar una encendida aparece el recuadro negro con capítulo, porcentaje, tiempo de partida y fecha del último guardado; clic o Enter la carga. *Volver al menú principal* (o Escape) cierra.
+  - El porcentaje es fijo por ahora: `ReglasRanuras.PORCENTAJE_PROVISIONAL` (10). Cuando existan los capítulos, se reemplaza `ReglasRanuras.CalcularPorcentaje`.
+  - Cada ranura es un archivo en `Application.persistentDataPath`: `progreso_partida.json` (ranura 1), `progreso_partida_2.json` y `progreso_partida_3.json`. Para probar con las velas apagadas, borra esos archivos.
+
 ## Escena ChapterSelect
 
 1. Escena vacía > **UniversalPlatform > ChapterSelect > Construir escena**. Genera la esfera, los 12 números, las manillas, los 4 boxes, la capa de la puerta (desactivada) y el `ChapterSelectInstaller`.
 2. Guarda como `ChapterSelect`.
 
-**Arte del reloj:** el constructor usa los PNG de `Assets/Art/Clock` (esfera, 12 numerales romanos y las dos manillas; los SVG originales están en `ArteFuente/Reloj`). Las manillas están dibujadas con el eje en el centro del lienzo, así que usan **Pivot = (0.5, 0.5)** y el mismo tamaño que la esfera. El reloj no lleva relleno: las líneas y las manillas son blancas y cada una tiene detrás una capa de halo (`ClockFaceGlow` y el hijo `Brillo` de cada manilla) cuyo color e intensidad se cambian en *Image > Color*. Todos los PNG son blancos para poder teñirlos; los colores de los numerales (normal, iluminado, bloqueado) se ajustan en cada `Numero_N` > `ClockNumberView`. Si falta algún PNG, el constructor usa el arte provisional y avisa por consola.
+**Arte del reloj:** el constructor usa los PNG de `Assets/Art/Clock` (esfera, 12 numerales romanos y las dos manillas; los SVG originales están en `ArteFuente/Reloj`). Las manillas están dibujadas con el eje en el centro del lienzo, así que usan **Pivot = (0.5, 0.5)** y el mismo tamaño que la esfera. El reloj no lleva relleno y va sobre el mismo fondo de vitrales, más oscurecido: las líneas y las manillas son blancas y cada una tiene detrás una capa de halo (`ClockFaceGlow` y el hijo `Brillo` de cada manilla) cuyo color e intensidad se cambian en *Image > Color*. Todos los PNG son blancos para poder teñirlos; los colores de los numerales (normal, iluminado, bloqueado) se ajustan en cada `Numero_N` > `ClockNumberView`. Si falta algún PNG, el constructor usa el arte provisional y avisa por consola.
 
 **Cambiar al arte propio (si reemplazas los PNG a mano):**
 - *ClockFace*: tu esfera, lo más grande posible. Los números y manillas deben quedar centrados sobre ella.
