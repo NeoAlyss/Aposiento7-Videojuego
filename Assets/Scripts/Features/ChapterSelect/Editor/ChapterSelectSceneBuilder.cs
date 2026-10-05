@@ -35,8 +35,10 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
         private static readonly Color Brillo = new Color(0.75f, 0.85f, 1f, 0.8f);
 
         // Colores de los numerales.
-        private static readonly Color NumeroNormal = new Color(1f, 1f, 1f, 0.9f);
-        private static readonly Color NumeroIluminado = new Color(1f, 0.86f, 0.55f, 1f);
+        // El seleccionado va en blanco pleno (y ClockNumberView lo agranda con _escalaIluminado);
+        // el resto queda con algo de transparencia para que el seleccionado destaque.
+        private static readonly Color NumeroNormal = new Color(1f, 1f, 1f, 0.65f);
+        private static readonly Color NumeroIluminado = Color.white;
         private static readonly Color NumeroBloqueado = new Color(1f, 1f, 1f, 0.3f);
         private static readonly Color NumeroBloqueadoIluminado = new Color(1f, 1f, 1f, 0.55f);
 
