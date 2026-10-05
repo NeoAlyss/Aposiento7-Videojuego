@@ -29,11 +29,16 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
         private const float Escala = TamanoReloj / 1024f;
         private const float RadioNumerales = 405f * Escala;   // centro de la banda de números del dibujo
 
-        // Colores de los numerales (tinta sobre la esfera crema).
-        private static readonly Color NumeroNormal = new Color(0.12f, 0.08f, 0.06f, 0.9f);
-        private static readonly Color NumeroIluminado = new Color(0.62f, 0.14f, 0.08f, 1f);
-        private static readonly Color NumeroBloqueado = new Color(0.12f, 0.08f, 0.06f, 0.3f);
-        private static readonly Color NumeroBloqueadoIluminado = new Color(0.12f, 0.08f, 0.06f, 0.55f);
+        // El reloj no lleva relleno: líneas y manillas blancas sobre la noche, con un halo suave.
+        // Los PNG son blancos, así que estos colores se pueden cambiar en el inspector (Image > Color).
+        private static readonly Color Linea = Color.white;
+        private static readonly Color Brillo = new Color(0.75f, 0.85f, 1f, 0.8f);
+
+        // Colores de los numerales.
+        private static readonly Color NumeroNormal = new Color(1f, 1f, 1f, 0.9f);
+        private static readonly Color NumeroIluminado = new Color(1f, 0.86f, 0.55f, 1f);
+        private static readonly Color NumeroBloqueado = new Color(1f, 1f, 1f, 0.3f);
+        private static readonly Color NumeroBloqueadoIluminado = new Color(1f, 1f, 1f, 0.55f);
 
         [MenuItem("UniversalPlatform/ChapterSelect/Construir escena")]
         public static void Construir()
@@ -49,15 +54,16 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             var grupoReloj = reloj.gameObject.AddComponent<CanvasGroup>();
 
             var tamanoReloj = new Vector2(TamanoReloj, TamanoReloj);
-            var esfera = SceneBuilderUtils.CrearImage("ClockFace", reloj, Crema,
-                CargarSprite("esfera_fondo") ?? SceneBuilderUtils.SpriteCirculo());
-            SceneBuilderUtils.Colocar(esfera.rectTransform, Vector2.zero, tamanoReloj);
-
             var spriteLineas = CargarSprite("esfera_reloj");
             if (spriteLineas != null)
             {
-                var lineas = SceneBuilderUtils.CrearImage("ClockFaceArt", reloj, Color.white, spriteLineas);
-                SceneBuilderUtils.Colocar(lineas.rectTransform, Vector2.zero, tamanoReloj);
+                CrearCapa("ClockFaceGlow", reloj, CargarSprite("esfera_reloj_brillo"), Brillo, tamanoReloj);
+                CrearCapa("ClockFace", reloj, spriteLineas, Linea, tamanoReloj);
+            }
+            else
+            {
+                var esfera = SceneBuilderUtils.CrearImage("ClockFace", reloj, Crema, SceneBuilderUtils.SpriteCirculo());
+                SceneBuilderUtils.Colocar(esfera.rectTransform, Vector2.zero, tamanoReloj);
             }
 
             var numerosRaiz = SceneBuilderUtils.CrearRect("Numbers", reloj);
@@ -102,8 +108,8 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             RectTransform horaria, minutero;
             if (manillasDibujadas)
             {
-                horaria = CrearManillaDibujada(reloj, "ManillaHoraria", spriteHoraria);
-                minutero = CrearManillaDibujada(reloj, "ManillaMinutero", spriteMinutero);
+                horaria = CrearManillaDibujada(reloj, "ManillaHoraria", spriteHoraria, CargarSprite("manilla_horario_brillo"));
+                minutero = CrearManillaDibujada(reloj, "ManillaMinutero", spriteMinutero, CargarSprite("manilla_minutero_brillo"));
             }
             else
             {
@@ -183,17 +189,26 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
 
         /// <summary>
         /// Manilla con arte propio: el dibujo ocupa el mismo lienzo que la esfera y gira sobre su
-        /// centro (trae contrapeso bajo el eje), por eso el pivot va en (0.5, 0.5).
+        /// centro (trae contrapeso bajo el eje), por eso el pivot va en (0.5, 0.5). El objeto que
+        /// gira es un contenedor con dos hijos: el halo ("Brillo") y el trazo ("Dibujo").
         /// </summary>
-        private static RectTransform CrearManillaDibujada(Transform padre, string nombre, Sprite sprite)
+        private static RectTransform CrearManillaDibujada(Transform padre, string nombre, Sprite sprite, Sprite spriteBrillo)
         {
-            var img = SceneBuilderUtils.CrearImage(nombre, padre, Color.white, sprite);
-            var rt = img.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            var tamano = new Vector2(TamanoReloj, TamanoReloj);
+            var rt = SceneBuilderUtils.CrearRect(nombre, padre);
+            SceneBuilderUtils.Colocar(rt, Vector2.zero, tamano);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(TamanoReloj, TamanoReloj);
+            CrearCapa("Brillo", rt, spriteBrillo, Brillo, tamano);
+            CrearCapa("Dibujo", rt, sprite, Linea, tamano);
             return rt;
+        }
+
+        /// <summary>Imagen centrada del tamaño indicado; no crea nada si el sprite no existe.</summary>
+        private static void CrearCapa(string nombre, Transform padre, Sprite sprite, Color color, Vector2 tamano)
+        {
+            if (sprite == null) return;
+            var img = SceneBuilderUtils.CrearImage(nombre, padre, color, sprite);
+            SceneBuilderUtils.Colocar(img.rectTransform, Vector2.zero, tamano);
         }
 
         /// <summary>

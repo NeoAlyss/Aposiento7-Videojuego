@@ -53,7 +53,7 @@ Assets/Scripts/
 1. Escena vacía > **UniversalPlatform > ChapterSelect > Construir escena**. Genera la esfera, los 12 números, las manillas, los 4 boxes, la capa de la puerta (desactivada) y el `ChapterSelectInstaller`.
 2. Guarda como `ChapterSelect`.
 
-**Arte del reloj:** el constructor usa los PNG de `Assets/Art/Clock` (esfera, 12 numerales romanos y las dos manillas; los SVG originales están en `ArteFuente/Reloj`). Las manillas están dibujadas con el eje en el centro del lienzo, así que usan **Pivot = (0.5, 0.5)** y el mismo tamaño que la esfera. Los numerales son blancos para poder teñirlos: sus colores (normal, iluminado, bloqueado) se ajustan en cada `Numero_N` > `ClockNumberView`. Si falta algún PNG, el constructor usa el arte provisional y avisa por consola.
+**Arte del reloj:** el constructor usa los PNG de `Assets/Art/Clock` (esfera, 12 numerales romanos y las dos manillas; los SVG originales están en `ArteFuente/Reloj`). Las manillas están dibujadas con el eje en el centro del lienzo, así que usan **Pivot = (0.5, 0.5)** y el mismo tamaño que la esfera. El reloj no lleva relleno: las líneas y las manillas son blancas y cada una tiene detrás una capa de halo (`ClockFaceGlow` y el hijo `Brillo` de cada manilla) cuyo color e intensidad se cambian en *Image > Color*. Todos los PNG son blancos para poder teñirlos; los colores de los numerales (normal, iluminado, bloqueado) se ajustan en cada `Numero_N` > `ClockNumberView`. Si falta algún PNG, el constructor usa el arte provisional y avisa por consola.
 
 **Cambiar al arte propio (si reemplazas los PNG a mano):**
 - *ClockFace*: tu esfera, lo más grande posible. Los números y manillas deben quedar centrados sobre ella.
