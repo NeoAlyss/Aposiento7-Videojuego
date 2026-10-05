@@ -148,7 +148,7 @@ namespace UniversalPlatform.Features.MainMenu.Editor
             textoInfo.rectTransform.offsetMin = new Vector2(30f, 15f);
             textoInfo.rectTransform.offsetMax = new Vector2(-30f, -15f);
 
-            var volver = CrearBoton(raiz, "Volver al menú principal", -475f, 40f);
+            var volver = CrearBoton(raiz, "Volver", -475f, 40f);
             AgregarFlechaVolver(volver);
 
             SceneBuilderUtils.AsignarLista(vista, "_velas", velas);
@@ -170,7 +170,7 @@ namespace UniversalPlatform.Features.MainMenu.Editor
             if (sprite == null) return;
 
             var flecha = SceneBuilderUtils.CrearImage("Flecha", boton.transform, new Color(1f, 1f, 1f, 0.55f), sprite);
-            SceneBuilderUtils.Colocar(flecha.rectTransform, new Vector2(-300f, 0f), new Vector2(108f, 60f));
+            SceneBuilderUtils.Colocar(flecha.rectTransform, new Vector2(-140f, 0f), new Vector2(108f, 60f));
 
             var graficos = new List<Graphic>();
             var texto = boton.GetComponentInChildren<TextMeshProUGUI>();

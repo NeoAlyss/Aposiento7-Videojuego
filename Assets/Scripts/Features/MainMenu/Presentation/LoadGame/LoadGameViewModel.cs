@@ -126,7 +126,7 @@ namespace UniversalPlatform.Features.MainMenu.Presentation.LoadGame
             }
         }
 
-        /// <summary>Escape o el botón "Volver al menú principal".</summary>
+        /// <summary>Escape o el botón "Volver".</summary>
         public void Volver()
         {
             if (!Interactuable) return;

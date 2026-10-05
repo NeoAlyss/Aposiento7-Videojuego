@@ -54,7 +54,7 @@ Assets/Scripts/
 - **Botones:** solo texto. Sin seleccionar van en blanco atenuado; seleccionados, en blanco pleno, más grandes y con resplandor en las letras (`MenuButtonView`: *Color Gris*, *Color Iluminado*, *Escala Iluminado*, *Brillo Texto*).
 - **Partidas guardadas:** hay 3 ranuras (`ReglasRanuras.CANTIDAD`), una vela por ranura dentro del objeto `CargarPartida`. Vela encendida = hay partida; apagada = ranura vacía.
   - *Nueva partida* usa la primera vela libre y entra directo. Si las tres están ocupadas, abre las velas para elegir cuál reemplazar.
-  - *Cargar partida* abre las velas. Al seleccionar una encendida aparece el recuadro negro con capítulo, porcentaje, tiempo de partida y fecha del último guardado; clic o Enter la carga. *Volver al menú principal* (o Escape) cierra.
+  - *Cargar partida* abre las velas. Al seleccionar una encendida aparece el recuadro negro con capítulo, porcentaje, tiempo de partida y fecha del último guardado; clic o Enter la carga. *Volver* (o Escape) cierra.
   - El porcentaje es fijo por ahora: `ReglasRanuras.PORCENTAJE_PROVISIONAL` (10). Cuando existan los capítulos, se reemplaza `ReglasRanuras.CalcularPorcentaje`.
   - Cada ranura es un archivo en `Application.persistentDataPath`: `progreso_partida.json` (ranura 1), `progreso_partida_2.json` y `progreso_partida_3.json`. Para probar con las velas apagadas, borra esos archivos.
 

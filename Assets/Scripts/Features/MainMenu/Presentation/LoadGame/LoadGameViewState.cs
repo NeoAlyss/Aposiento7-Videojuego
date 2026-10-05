@@ -21,7 +21,7 @@ namespace UniversalPlatform.Features.MainMenu.Presentation.LoadGame
         /// <summary>Una por vela, en orden (ranura 1 a la izquierda).</summary>
         public IReadOnlyList<ResumenRanura> Ranuras { get; }
         /// <summary>
-        /// 0..N-1 = vela; N = botón "Volver al menú principal"; <see cref="SIN_SELECCION"/> = nada.
+        /// 0..N-1 = vela; N = botón "Volver"; <see cref="SIN_SELECCION"/> = nada.
         /// </summary>
         public int IndiceSeleccionado { get; }
         public string Titulo { get; }
