@@ -19,7 +19,7 @@ namespace UniversalPlatform.Shared
         public static EventSystem Asegurar()
         {
 #if UNITY_2023_1_OR_NEWER
-            var es = FindFirstObjectByType<EventSystem>();
+            var es = FindAnyObjectByType<EventSystem>();
 #else
             var es = FindObjectOfType<EventSystem>();
 #endif
