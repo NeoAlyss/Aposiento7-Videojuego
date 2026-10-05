@@ -53,7 +53,9 @@ Assets/Scripts/
 1. Escena vacía > **UniversalPlatform > ChapterSelect > Construir escena**. Genera la esfera, los 12 números, las manillas, los 4 boxes, la capa de la puerta (desactivada) y el `ChapterSelectInstaller`.
 2. Guarda como `ChapterSelect`.
 
-**Cambiar al arte propio:**
+**Arte del reloj:** el constructor usa los PNG de `Assets/Art/Clock` (esfera, 12 numerales romanos y las dos manillas; los SVG originales están en `ArteFuente/Reloj`). Las manillas están dibujadas con el eje en el centro del lienzo, así que usan **Pivot = (0.5, 0.5)** y el mismo tamaño que la esfera. Los numerales son blancos para poder teñirlos: sus colores (normal, iluminado, bloqueado) se ajustan en cada `Numero_N` > `ClockNumberView`. Si falta algún PNG, el constructor usa el arte provisional y avisa por consola.
+
+**Cambiar al arte propio (si reemplazas los PNG a mano):**
 - *ClockFace*: tu esfera, lo más grande posible. Los números y manillas deben quedar centrados sobre ella.
 - *Manillas*: sprites dibujados **apuntando hacia arriba** y con el **Pivot en la base** (Pivot = 0.5, 0). La horaria apunta al capítulo y el minutero da una vuelta completa por cada hora recorrida, terminando siempre en las 12.
 - *Números*: cada `Numero_N` tiene un TMP (o tu numeral como Image). `ChapterSelectView` los coloca en círculo con *Radio Numeros* (ajústalo a tu dibujo o desmarca *Colocar Numeros Automaticamente*). Mantén el tamaño ~120x120 para que el hover sea cómodo.

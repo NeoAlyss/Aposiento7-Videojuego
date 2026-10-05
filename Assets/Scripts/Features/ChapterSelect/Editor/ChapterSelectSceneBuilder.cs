@@ -12,15 +12,28 @@ using UniversalPlatform.Shared.Editor;
 namespace UniversalPlatform.Features.ChapterSelect.Editor
 {
     /// <summary>
-    /// Arma la escena del reloj de capítulos con arte provisional (círculo, rectángulos y texto).
-    /// Cuando tengas tus assets (esfera, manillas, numerales, cajas), reemplázalos en el inspector:
-    /// los scripts no cambian. Uso: abre una escena vacía y ejecuta
+    /// Arma la escena del reloj de capítulos. Usa el arte de <c>Assets/Art/Clock</c> (esfera,
+    /// numerales romanos y manillas); si falta algún PNG, cae al arte provisional (círculo,
+    /// rectángulos y texto) y avisa por consola. Uso: abre una escena vacía y ejecuta
     /// UniversalPlatform > ChapterSelect > Construir escena.
     /// </summary>
     public static class ChapterSelectSceneBuilder
     {
         private static readonly Color Crema = new Color(0.93f, 0.87f, 0.72f, 1f);
         private static readonly Color Oscuro = new Color(0.12f, 0.08f, 0.06f, 1f);
+
+        // Arte del reloj. Los PNG están dibujados sobre un lienzo de 1024 px con el eje en el centro,
+        // así que esfera y manillas comparten tamaño y quedan alineadas sin ajustes.
+        private const string CarpetaArte = "Assets/Art/Clock";
+        private const float TamanoReloj = 980f;
+        private const float Escala = TamanoReloj / 1024f;
+        private const float RadioNumerales = 405f * Escala;   // centro de la banda de números del dibujo
+
+        // Colores de los numerales (tinta sobre la esfera crema).
+        private static readonly Color NumeroNormal = new Color(0.12f, 0.08f, 0.06f, 0.9f);
+        private static readonly Color NumeroIluminado = new Color(0.62f, 0.14f, 0.08f, 1f);
+        private static readonly Color NumeroBloqueado = new Color(0.12f, 0.08f, 0.06f, 0.3f);
+        private static readonly Color NumeroBloqueadoIluminado = new Color(0.12f, 0.08f, 0.06f, 0.55f);
 
         [MenuItem("UniversalPlatform/ChapterSelect/Construir escena")]
         public static void Construir()
@@ -35,8 +48,17 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             SceneBuilderUtils.Estirar(reloj);
             var grupoReloj = reloj.gameObject.AddComponent<CanvasGroup>();
 
-            var esfera = SceneBuilderUtils.CrearImage("ClockFace", reloj, Crema, SceneBuilderUtils.SpriteCirculo());
-            SceneBuilderUtils.Colocar(esfera.rectTransform, Vector2.zero, new Vector2(980f, 980f));
+            var tamanoReloj = new Vector2(TamanoReloj, TamanoReloj);
+            var esfera = SceneBuilderUtils.CrearImage("ClockFace", reloj, Crema,
+                CargarSprite("esfera_fondo") ?? SceneBuilderUtils.SpriteCirculo());
+            SceneBuilderUtils.Colocar(esfera.rectTransform, Vector2.zero, tamanoReloj);
+
+            var spriteLineas = CargarSprite("esfera_reloj");
+            if (spriteLineas != null)
+            {
+                var lineas = SceneBuilderUtils.CrearImage("ClockFaceArt", reloj, Color.white, spriteLineas);
+                SceneBuilderUtils.Colocar(lineas.rectTransform, Vector2.zero, tamanoReloj);
+            }
 
             var numerosRaiz = SceneBuilderUtils.CrearRect("Numbers", reloj);
             SceneBuilderUtils.Colocar(numerosRaiz, Vector2.zero, new Vector2(10f, 10f));
@@ -45,17 +67,51 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             {
                 var rt = SceneBuilderUtils.CrearRect($"Numero_{n}", numerosRaiz);
                 SceneBuilderUtils.Colocar(rt, Vector2.zero, new Vector2(120f, 120f));
-                var texto = SceneBuilderUtils.CrearTexto("Texto", rt, n.ToString(), 78f, Oscuro);
-                SceneBuilderUtils.Estirar(texto.rectTransform);
                 var vistaNumero = rt.gameObject.AddComponent<ClockNumberView>();
-                SceneBuilderUtils.AsignarLista(vistaNumero, "_elementos", new List<Graphic> { texto });
+
+                Graphic grafico;
+                var spriteNumero = CargarSprite($"numero_{n:00}");
+                if (spriteNumero != null)
+                {
+                    // Numeral romano dibujado: va girado siguiendo la esfera, como en el diseño.
+                    var numeral = SceneBuilderUtils.CrearImage("Numeral", rt, NumeroNormal, spriteNumero);
+                    SceneBuilderUtils.Colocar(numeral.rectTransform, Vector2.zero,
+                        new Vector2(160f, 100f) * Escala);
+                    rt.localRotation = Quaternion.Euler(0f, 0f, -30f * n);
+                    AsignarColor(vistaNumero, "_colorNormal", NumeroNormal);
+                    AsignarColor(vistaNumero, "_colorIluminado", NumeroIluminado);
+                    AsignarColor(vistaNumero, "_colorBloqueado", NumeroBloqueado);
+                    AsignarColor(vistaNumero, "_colorBloqueadoIluminado", NumeroBloqueadoIluminado);
+                    grafico = numeral;
+                }
+                else
+                {
+                    var texto = SceneBuilderUtils.CrearTexto("Texto", rt, n.ToString(), 78f, Oscuro);
+                    SceneBuilderUtils.Estirar(texto.rectTransform);
+                    grafico = texto;
+                }
+
+                SceneBuilderUtils.AsignarLista(vistaNumero, "_elementos", new List<Graphic> { grafico });
                 numeros.Add(vistaNumero);
             }
 
-            var horaria = CrearManilla(reloj, "ManillaHoraria", new Vector2(26f, 300f));
-            var minutero = CrearManilla(reloj, "ManillaMinutero", new Vector2(16f, 420f));
-            var centro = SceneBuilderUtils.CrearImage("Centro", reloj, Oscuro, SceneBuilderUtils.SpriteCirculo());
-            SceneBuilderUtils.Colocar(centro.rectTransform, Vector2.zero, new Vector2(60f, 60f));
+            var spriteHoraria = CargarSprite("manilla_horario");
+            var spriteMinutero = CargarSprite("manilla_minutero");
+            bool manillasDibujadas = spriteHoraria != null && spriteMinutero != null;
+
+            RectTransform horaria, minutero;
+            if (manillasDibujadas)
+            {
+                horaria = CrearManillaDibujada(reloj, "ManillaHoraria", spriteHoraria);
+                minutero = CrearManillaDibujada(reloj, "ManillaMinutero", spriteMinutero);
+            }
+            else
+            {
+                horaria = CrearManilla(reloj, "ManillaHoraria", new Vector2(26f, 300f));
+                minutero = CrearManilla(reloj, "ManillaMinutero", new Vector2(16f, 420f));
+                var centro = SceneBuilderUtils.CrearImage("Centro", reloj, Oscuro, SceneBuilderUtils.SpriteCirculo());
+                SceneBuilderUtils.Colocar(centro.rectTransform, Vector2.zero, new Vector2(60f, 60f));
+            }
 
             // ---------- Boxes de información ----------
             var panelInfo = CrearPanelInfo(reloj);
@@ -101,6 +157,7 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             var vistaGo = SceneBuilderUtils.CrearRect("ChapterSelectView", raiz).gameObject;
             var vista = vistaGo.AddComponent<ChapterSelectView>();
             SceneBuilderUtils.AsignarLista(vista, "_numeros", numeros);
+            if (spriteLineas != null) SceneBuilderUtils.AsignarFloat(vista, "_radioNumeros", RadioNumerales);
             SceneBuilderUtils.Asignar(vista, "_manillaHoraria", horaria);
             SceneBuilderUtils.Asignar(vista, "_manillaMinutero", minutero);
             SceneBuilderUtils.Asignar(vista, "_panelInfo", panelInfo);
@@ -122,6 +179,58 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             rt.anchoredPosition = Vector2.zero;
             rt.sizeDelta = tamano;
             return rt;
+        }
+
+        /// <summary>
+        /// Manilla con arte propio: el dibujo ocupa el mismo lienzo que la esfera y gira sobre su
+        /// centro (trae contrapeso bajo el eje), por eso el pivot va en (0.5, 0.5).
+        /// </summary>
+        private static RectTransform CrearManillaDibujada(Transform padre, string nombre, Sprite sprite)
+        {
+            var img = SceneBuilderUtils.CrearImage(nombre, padre, Color.white, sprite);
+            var rt = img.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(TamanoReloj, TamanoReloj);
+            return rt;
+        }
+
+        /// <summary>
+        /// Carga un PNG de <see cref="CarpetaArte"/> como Sprite. Si Unity lo importó como textura
+        /// normal (o como sprite múltiple), lo reimporta como sprite único. Devuelve null si no existe.
+        /// </summary>
+        private static Sprite CargarSprite(string nombre)
+        {
+            string ruta = $"{CarpetaArte}/{nombre}.png";
+            var importer = AssetImporter.GetAtPath(ruta) as TextureImporter;
+            if (importer == null)
+            {
+                Debug.LogWarning($"[ChapterSelectSceneBuilder] No se encontró '{ruta}'; se usa arte provisional en su lugar.");
+                return null;
+            }
+
+            if (importer.textureType != TextureImporterType.Sprite
+                || importer.spriteImportMode != SpriteImportMode.Single
+                || importer.mipmapEnabled)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
+        }
+
+        private static void AsignarColor(Object objetivo, string campo, Color valor)
+        {
+            var so = new SerializedObject(objetivo);
+            var prop = so.FindProperty(campo);
+            if (prop == null) { Debug.LogError($"[ChapterSelectSceneBuilder] No existe el campo '{campo}' en {objetivo.GetType().Name}"); return; }
+            prop.colorValue = valor;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static RawImage CrearPuerta(Transform padre, string nombre, bool izquierda)
