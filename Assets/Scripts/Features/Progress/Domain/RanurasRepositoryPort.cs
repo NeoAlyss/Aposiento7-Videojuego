@@ -16,5 +16,8 @@ namespace UniversalPlatform.Features.Progress.Domain
 
         /// <summary>Crea una partida vacía en la ranura (reemplaza la que hubiera) y la deja activa.</summary>
         void IniciarPartidaEn(int numero);
+
+        /// <summary>Borra la partida guardada en la ranura (la vela queda apagada).</summary>
+        void BorrarPartida(int numero);
     }
 }

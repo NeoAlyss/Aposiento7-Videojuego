@@ -17,6 +17,19 @@ namespace UniversalPlatform.Features.Progress.Datasources
             _rutaArchivo = Path.Combine(directorioBase, nombreArchivo);
         }
 
+        /// <summary>Elimina el archivo de la partida (si existe).</summary>
+        public void Borrar()
+        {
+            try
+            {
+                if (File.Exists(_rutaArchivo)) File.Delete(_rutaArchivo);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[JsonFileProgresoLocalDataSource] Error borrando la partida: {ex.Message}");
+            }
+        }
+
         /// <summary>Momento del último guardado en milisegundos Unix; 0 si no hay archivo o está dañado.</summary>
         public long LeerGuardadoUnixMs()
         {

@@ -30,6 +30,8 @@ namespace UniversalPlatform.Features.MainMenu.Tests.Editor.Presentation
                 Activa = numero;
                 PartidasIniciadas++;
             }
+
+            public void BorrarPartida(int numero) { ConPartida.Remove(numero); }
         }
 
         private RanurasFalsas _repo;
@@ -44,7 +46,8 @@ namespace UniversalPlatform.Features.MainMenu.Tests.Editor.Presentation
             _vm = new LoadGameViewModel(
                 new ObtenerRanurasUseCase(_repo),
                 new CargarRanuraUseCase(_repo),
-                new IniciarPartidaEnRanuraUseCase(_repo));
+                new IniciarPartidaEnRanuraUseCase(_repo),
+                new BorrarRanuraUseCase(_repo));
             _entradas = 0;
             _vacias = new List<int>();
             _vm.OnEntrarAPartida += () => _entradas++;
@@ -175,6 +178,117 @@ namespace UniversalPlatform.Features.MainMenu.Tests.Editor.Presentation
 
             Assert.AreEqual(LoadGameViewState.SIN_SELECCION, _vm.EstadoActual.IndiceSeleccionado);
             Assert.AreEqual(0, _entradas);
+        }
+
+        [Test]
+        public void Borrar_PideConfirmacion_YLaSegundaVezBorra()
+        {
+            _repo.ConPartida.Add(1);
+            _vm.AbrirCarga();
+            Assert.IsTrue(_vm.EstadoActual.PuedeBorrar);
+
+            _vm.SolicitarBorrado();
+            Assert.IsTrue(_vm.EstadoActual.ConfirmandoBorrado);
+            Assert.IsTrue(_repo.ConPartida.Contains(1), "La primera vez solo pide confirmar.");
+            StringAssert.Contains("Borrar", _vm.EstadoActual.TextoInfo);
+
+            _vm.SolicitarBorrado();
+            Assert.IsFalse(_repo.ConPartida.Contains(1));
+            Assert.IsFalse(_vm.EstadoActual.Ranuras[0].TienePartida, "La vela queda apagada.");
+            Assert.IsFalse(_vm.EstadoActual.PuedeBorrar);
+            Assert.IsFalse(_vm.EstadoActual.ConfirmandoBorrado);
+        }
+
+        [Test]
+        public void Borrar_MoverseCancelaLaConfirmacion()
+        {
+            _repo.ConPartida.Add(1);
+            _repo.ConPartida.Add(2);
+            _vm.AbrirCarga();
+            _vm.SolicitarBorrado();
+
+            _vm.Mover(+1);
+            _vm.Mover(-1);
+            _vm.SolicitarBorrado();
+
+            Assert.IsTrue(_repo.ConPartida.Contains(1), "Tras moverse vuelve a pedir confirmación.");
+            Assert.IsTrue(_vm.EstadoActual.ConfirmandoBorrado);
+        }
+
+        [Test]
+        public void Borrar_VelaApagada_NoHaceNada()
+        {
+            _vm.AbrirCarga();
+            _vm.Mover(+1);
+
+            Assert.IsFalse(_vm.EstadoActual.PuedeBorrar);
+            _vm.SolicitarBorrado();
+            Assert.IsFalse(_vm.EstadoActual.ConfirmandoBorrado);
+        }
+
+        [Test]
+        public void Teclado_BajaDesdeVelaEncendidaAlBotonBorrar_YBorraConDosConfirmaciones()
+        {
+            _repo.ConPartida.Add(1);
+            _vm.AbrirCarga();
+
+            _vm.MoverVertical(+1);
+            Assert.IsTrue(_vm.EstadoActual.BorrarSeleccionado);
+            Assert.IsTrue(_vm.EstadoActual.PuedeBorrar, "El botón sigue visible con el foco en él.");
+            Assert.AreEqual(0, _vm.EstadoActual.IndiceVela, "La información sigue siendo la de la vela.");
+
+            _vm.Confirmar();
+            Assert.IsTrue(_vm.EstadoActual.ConfirmandoBorrado);
+            Assert.IsTrue(_repo.ConPartida.Contains(1));
+
+            _vm.Confirmar();
+            Assert.IsFalse(_repo.ConPartida.Contains(1));
+            Assert.AreEqual(0, _vm.EstadoActual.IndiceSeleccionado, "Sin partida que borrar, el foco vuelve a la vela.");
+            Assert.AreEqual(0, _entradas);
+        }
+
+        [Test]
+        public void Teclado_EnLosBotones_IzquierdaYDerechaAlternanVolverYBorrar()
+        {
+            _repo.ConPartida.Add(1);
+            _vm.AbrirCarga();
+            _vm.MoverVertical(+1);
+
+            _vm.Mover(-1);
+            Assert.IsTrue(_vm.EstadoActual.VolverSeleccionado);
+            Assert.IsTrue(_vm.EstadoActual.PuedeBorrar);
+
+            _vm.Mover(+1);
+            Assert.IsTrue(_vm.EstadoActual.BorrarSeleccionado);
+
+            _vm.MoverVertical(-1);
+            Assert.AreEqual(0, _vm.EstadoActual.IndiceSeleccionado, "Arriba vuelve a la vela elegida.");
+        }
+
+        [Test]
+        public void Teclado_DesdeVelaApagada_AbajoVaAVolver()
+        {
+            _vm.AbrirCarga();
+            _vm.Mover(+1);
+            _vm.Mover(+1);
+
+            _vm.MoverVertical(+1);
+            Assert.IsTrue(_vm.EstadoActual.VolverSeleccionado);
+            _vm.MoverVertical(-1);
+            Assert.AreEqual(1, _vm.EstadoActual.IndiceSeleccionado);
+        }
+
+        [Test]
+        public void Mouse_ClicEnBorrar_PideConfirmacion()
+        {
+            _repo.ConPartida.Add(2);
+            _vm.AbrirCarga();
+
+            _vm.Hover(_vm.EstadoActual.IndiceBorrar);
+            _vm.Activar(_vm.EstadoActual.IndiceBorrar);
+
+            Assert.IsTrue(_vm.EstadoActual.ConfirmandoBorrado);
+            Assert.AreEqual(1, _vm.EstadoActual.IndiceVela);
         }
 
         [Test]

@@ -18,6 +18,12 @@ namespace UniversalPlatform.Shared
         public static bool Derecha => Presionada(KeyCode.RightArrow, KeyCode.D);
         public static bool Confirmar => Presionada(KeyCode.Space, KeyCode.Return, KeyCode.KeypadEnter);
         public static bool Cancelar => Presionada(KeyCode.Escape);
+        /// <summary>Deshacer el último paso (puzles).</summary>
+        public static bool Deshacer => Presionada(KeyCode.Z, KeyCode.Backspace);
+        /// <summary>Reiniciar el intento (puzles).</summary>
+        public static bool Reiniciar => Presionada(KeyCode.R);
+        /// <summary>Borrar (partidas guardadas).</summary>
+        public static bool Borrar => Presionada(KeyCode.Delete);
 
         private static bool Presionada(params KeyCode[] teclas)
         {
@@ -55,6 +61,10 @@ namespace UniversalPlatform.Shared
                 case KeyCode.Return: return Key.Enter;
                 case KeyCode.KeypadEnter: return Key.NumpadEnter;
                 case KeyCode.Escape: return Key.Escape;
+                case KeyCode.Z: return Key.Z;
+                case KeyCode.R: return Key.R;
+                case KeyCode.Backspace: return Key.Backspace;
+                case KeyCode.Delete: return Key.Delete;
                 default: return Key.None;
             }
         }

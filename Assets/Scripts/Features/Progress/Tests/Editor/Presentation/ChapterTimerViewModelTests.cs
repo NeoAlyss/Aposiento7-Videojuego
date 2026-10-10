@@ -103,14 +103,19 @@ namespace UniversalPlatform.Features.Progress.Tests.Editor.Presentation
         }
 
         [Test]
-        public void Inicializar_ConProgresoPrevio_ContinuaDesdeAhi()
+        public void Inicializar_ConProgresoPrevio_ElCronometroPartEnCero_PeroLaPartidaSigueSumando()
         {
             _repo.Almacen["chapter_01"] = new ProgresoCapitulo("chapter_01", 2, 3600f, false);
 
             _vm.Inicializar("chapter_01");
-
-            Assert.AreEqual("01:00:00", _vm.EstadoActual.TiempoFormateado);
+            Assert.AreEqual("00:00:00", _vm.EstadoActual.TiempoFormateado, "Volver a jugar el capítulo parte de 0.");
             Assert.AreEqual(2, _vm.EstadoActual.Llaves);
+
+            _vm.AvanzarTiempo(5f);
+            _vm.Finalizar();
+            Assert.AreEqual("00:00:05", _vm.EstadoActual.TiempoFormateado);
+            Assert.AreEqual(3605f, _repo.ObtenerProgreso("chapter_01").SegundosJugados, 0.001f,
+                "El tiempo de partida guardado sigue acumulando.");
         }
     }
 }

@@ -30,11 +30,17 @@ namespace UniversalPlatform.Features.MainMenu.UI.LoadGame
         [Header("Volver")]
         [SerializeField] private MenuButtonView _botonVolver;
 
+        [Header("Borrar partida (solo aparece con una vela encendida seleccionada)")]
+        [SerializeField] private MenuButtonView _botonBorrar;
+        [SerializeField] private CanvasGroup _grupoBorrar;
+        [SerializeField] private TMP_Text _textoBorrar;
+
         [SerializeField] private float _duracionFade = 0.25f;
 
         private CanvasGroup _grupo;
         private LoadGameViewModel _viewModel;
         private float _alphaInfoObjetivo;
+        private float _alphaBorrarObjetivo;
         private int _frameUltimoCambio = -1;
 
         /// <summary>El submenú está abierto (aunque todavía esté apareciendo).</summary>
@@ -76,6 +82,9 @@ namespace UniversalPlatform.Features.MainMenu.UI.LoadGame
 
             if (_botonVolver != null)
                 _botonVolver.Construir(_velas != null ? _velas.Length : 0, AlEntrarElemento, _ => { }, AlClicElemento);
+            if (_botonBorrar != null)
+                _botonBorrar.Construir(_velas != null ? _velas.Length + 1 : 1, AlEntrarElemento, _ => { }, AlClicElemento);
+            if (_grupoBorrar != null) { _grupoBorrar.alpha = 0f; _grupoBorrar.blocksRaycasts = false; }
 
             _viewModel.OnStateChanged += AplicarEstado;
             _viewModel.OnEntrarAPartida += EntrarAPartida;
@@ -104,14 +113,18 @@ namespace UniversalPlatform.Features.MainMenu.UI.LoadGame
             float paso = _duracionFade > 0f ? Time.unscaledDeltaTime / _duracionFade : 1f;
             AplicarAlpha(Mathf.MoveTowards(Grupo.alpha, EstaVisible ? 1f : 0f, paso));
             if (_cajaInfo != null) _cajaInfo.alpha = Mathf.MoveTowards(_cajaInfo.alpha, _alphaInfoObjetivo, paso * 2f);
+            if (_grupoBorrar != null) _grupoBorrar.alpha = Mathf.MoveTowards(_grupoBorrar.alpha, _alphaBorrarObjetivo, paso * 2f);
 
             // La tecla que abrió el submenú no cuenta también como input dentro de él.
             if (_viewModel == null || !EstaVisible || Time.frameCount == _frameUltimoCambio) return;
 
-            if (MenuInput.Izquierda || MenuInput.Arriba) _viewModel.Mover(-1);
-            else if (MenuInput.Derecha || MenuInput.Abajo) _viewModel.Mover(+1);
+            if (MenuInput.Izquierda) _viewModel.Mover(-1);
+            else if (MenuInput.Derecha) _viewModel.Mover(+1);
+            else if (MenuInput.Arriba) _viewModel.MoverVertical(-1);
+            else if (MenuInput.Abajo) _viewModel.MoverVertical(+1);
             else if (MenuInput.Confirmar) _viewModel.Confirmar();
             else if (MenuInput.Cancelar) _viewModel.Volver();
+            else if (MenuInput.Borrar) _viewModel.SolicitarBorrado();
         }
 
         private void AlEntrarElemento(int i) { if (_viewModel != null) _viewModel.Hover(i); }
@@ -138,11 +151,17 @@ namespace UniversalPlatform.Features.MainMenu.UI.LoadGame
                 {
                     if (_velas[i] == null) continue;
                     _velas[i].SetEncendida(i < estado.Ranuras.Count && estado.Ranuras[i] != null && estado.Ranuras[i].TienePartida);
-                    _velas[i].SetResaltada(i == estado.IndiceSeleccionado);
+                    // Con el foco en "Borrar partida" la vela que se borraría sigue marcada.
+                    _velas[i].SetResaltada(i == estado.IndiceSeleccionado || (estado.BorrarSeleccionado && i == estado.IndiceVela));
                 }
             }
 
             if (_botonVolver != null) _botonVolver.SetResaltado(estado.VolverSeleccionado);
+
+            _alphaBorrarObjetivo = estado.PuedeBorrar ? 1f : 0f;
+            if (_grupoBorrar != null) _grupoBorrar.blocksRaycasts = estado.PuedeBorrar;
+            if (_botonBorrar != null) _botonBorrar.SetResaltado(estado.BorrarSeleccionado || estado.ConfirmandoBorrado);
+            if (_textoBorrar != null) _textoBorrar.text = estado.ConfirmandoBorrado ? "Confirmar borrado" : "Borrar partida";
 
             // El recuadro conserva el último texto mientras se desvanece.
             _alphaInfoObjetivo = estado.HayVelaSeleccionada ? 1f : 0f;

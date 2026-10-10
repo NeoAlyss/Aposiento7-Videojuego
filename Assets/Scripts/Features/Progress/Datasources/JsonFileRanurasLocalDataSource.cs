@@ -24,5 +24,7 @@ namespace UniversalPlatform.Features.Progress.Datasources
         public long LeerGuardadoUnixMs(int numero) => Archivo(numero).LeerGuardadoUnixMs();
 
         public void CrearVacia(int numero) => Archivo(numero).GuardarTodo(new List<ProgresoCapitulo>());
+
+        public void Borrar(int numero) => Archivo(numero).Borrar();
     }
 }

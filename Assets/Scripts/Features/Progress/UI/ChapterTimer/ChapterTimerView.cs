@@ -18,6 +18,9 @@ namespace UniversalPlatform.Features.Progress.UI.ChapterTimer
 
         public string IdCapitulo => _idCapitulo;
 
+        /// <summary>Mientras esté en true no suma tiempo (cinemáticas, animaciones, pantalla final).</summary>
+        public bool Pausado { get; set; }
+
         public void Construir(ChapterTimerViewModel viewModel)
         {
             _viewModel = viewModel;
@@ -27,7 +30,7 @@ namespace UniversalPlatform.Features.Progress.UI.ChapterTimer
 
         private void Update()
         {
-            if (_viewModel == null || Time.timeScale <= 0f) return;
+            if (_viewModel == null || Pausado || Time.timeScale <= 0f) return;
             _viewModel.AvanzarTiempo(Time.unscaledDeltaTime);
         }
 

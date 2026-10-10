@@ -149,7 +149,7 @@ namespace UniversalPlatform.Features.MainMenu.Editor
             textoInfo.rectTransform.offsetMax = new Vector2(-30f, -15f);
 
             var volver = CrearBoton(raiz, "Volver", -475f, 40f);
-            AgregarFlechaVolver(volver);
+            AgregarIcono(volver, "Assets/Art/UI/flecha_volver.png", "Flecha", new Vector2(-140f, 0f), new Vector2(108f, 60f));
 
             SceneBuilderUtils.AsignarLista(vista, "_velas", velas);
             SceneBuilderUtils.Asignar(vista, "_titulo", titulo);
@@ -157,25 +157,38 @@ namespace UniversalPlatform.Features.MainMenu.Editor
             SceneBuilderUtils.Asignar(vista, "_cajaInfo", grupoCaja);
             SceneBuilderUtils.Asignar(vista, "_textoInfo", textoInfo);
             SceneBuilderUtils.Asignar(vista, "_botonVolver", volver);
+
+            // Borrar partida: abajo a la derecha, visible solo con una vela encendida seleccionada.
+            var borrar = CrearBoton(raiz, "Borrar partida", -475f, 32f);
+            borrar.GetComponent<RectTransform>().anchoredPosition = new Vector2(560f, -475f);
+            AgregarIcono(borrar, "Assets/Art/UI/x_borrar.png", "X", new Vector2(-195f, 0f), new Vector2(62f, 62f));
+            var grupoBorrar = borrar.gameObject.AddComponent<CanvasGroup>();
+            grupoBorrar.alpha = 0f;
+            grupoBorrar.blocksRaycasts = false;
+            SceneBuilderUtils.Asignar(vista, "_botonBorrar", borrar);
+            SceneBuilderUtils.Asignar(vista, "_grupoBorrar", grupoBorrar);
+            SceneBuilderUtils.Asignar(vista, "_textoBorrar", borrar.GetComponentInChildren<TextMeshProUGUI>());
             return vista;
         }
 
         /// <summary>
-        /// Flecha a la izquierda del texto, con el mismo dibujo de punta y volutas que las manillas del
-        /// reloj. Se suma a los gráficos del botón para que cambie de color y brillo junto con el texto.
+        /// Ícono a la izquierda del texto (la flecha de "Volver", la X de "Borrar partida"), con el
+        /// mismo dibujo de puntas y volutas que las manillas del reloj. Se suma a los gráficos del
+        /// botón para que cambie de color y brillo junto con el texto.
         /// </summary>
-        private static void AgregarFlechaVolver(MenuButtonView boton)
+        private static void AgregarIcono(MenuButtonView boton, string ruta, string nombre, Vector2 posicion, Vector2 tamano)
         {
-            var sprite = SceneBuilderUtils.CargarSprite("Assets/Art/UI/flecha_volver.png");
+            var sprite = SceneBuilderUtils.CargarSprite(ruta);
             if (sprite == null) return;
 
-            var flecha = SceneBuilderUtils.CrearImage("Flecha", boton.transform, new Color(1f, 1f, 1f, 0.55f), sprite);
-            SceneBuilderUtils.Colocar(flecha.rectTransform, new Vector2(-140f, 0f), new Vector2(108f, 60f));
+            var icono = SceneBuilderUtils.CrearImage(nombre, boton.transform, new Color(1f, 1f, 1f, 0.55f), sprite);
+            SceneBuilderUtils.Colocar(icono.rectTransform, posicion, tamano);
+            icono.preserveAspect = true;
 
             var graficos = new List<Graphic>();
             var texto = boton.GetComponentInChildren<TextMeshProUGUI>();
             if (texto != null) graficos.Add(texto);
-            graficos.Add(flecha);
+            graficos.Add(icono);
             SceneBuilderUtils.AsignarLista(boton, "_textos", graficos);
         }
 

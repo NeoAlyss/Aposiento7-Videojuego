@@ -16,5 +16,8 @@ namespace UniversalPlatform.Features.Progress.Data
 
         /// <summary>Deja en la ranura una partida vacía, reemplazando la que hubiera.</summary>
         void CrearVacia(int numero);
+
+        /// <summary>Elimina el archivo de la ranura.</summary>
+        void Borrar(int numero);
     }
 }

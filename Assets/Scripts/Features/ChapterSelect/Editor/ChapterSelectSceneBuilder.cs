@@ -7,6 +7,7 @@ using UniversalPlatform.Features.ChapterSelect.DI;
 using UniversalPlatform.Features.ChapterSelect.UI.Clock;
 using UniversalPlatform.Features.ChapterSelect.UI.Info;
 using UniversalPlatform.Features.ChapterSelect.UI.Transition;
+using UniversalPlatform.Shared;
 using UniversalPlatform.Shared.Editor;
 
 namespace UniversalPlatform.Features.ChapterSelect.Editor
@@ -45,18 +46,52 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
         [MenuItem("UniversalPlatform/ChapterSelect/Construir escena")]
         public static void Construir()
         {
-            var canvas = SceneBuilderUtils.CrearCanvas("Canvas");
+            // Canvas con cámara en perspectiva: hace falta para que la puerta del reloj gire en 3D.
+            var canvas = SceneBuilderUtils.CrearCanvasConCamara("Canvas");
             var raiz = canvas.transform;
 
             // Fondo más oscuro que en el menú: detrás van las líneas finas del reloj.
             SceneBuilderUtils.CrearAmbienteNocturno(raiz, 0.42f);
 
-            // ---------- Reloj ----------
-            var reloj = SceneBuilderUtils.CrearRect("ClockGroup", raiz);
-            SceneBuilderUtils.Estirar(reloj);
+            var tamanoReloj = new Vector2(TamanoReloj, TamanoReloj);
+
+            // ---------- Escenario: lo que se agranda al entrar (interior + puerta) ----------
+            var escenario = SceneBuilderUtils.CrearRect("Escenario", raiz);
+            SceneBuilderUtils.Estirar(escenario);
+
+            // Interior del capítulo: queda detrás del reloj y solo aparece cuando la puerta se abre.
+            var spriteHalo = SceneBuilderUtils.CargarSprite("Assets/Art/Candle/vela_halo.png");
+            var spriteDisco = CargarSprite("portal_disco");
+
+            var resplandor = SceneBuilderUtils.CrearImage("PortalGlow", escenario, SceneBuilderUtils.Dorado,
+                spriteHalo != null ? spriteHalo : SceneBuilderUtils.SpriteCirculo());
+            SceneBuilderUtils.Colocar(resplandor.rectTransform, Vector2.zero, tamanoReloj * 1.7f);
+            var cr = resplandor.color; cr.a = 0f; resplandor.color = cr;
+
+            var portal = SceneBuilderUtils.CrearImage("Portal", escenario, Color.white,
+                spriteDisco != null ? spriteDisco : SceneBuilderUtils.SpriteCirculo());
+            SceneBuilderUtils.Colocar(portal.rectTransform, Vector2.zero, tamanoReloj * 0.96f);   // justo dentro del anillo exterior
+            portal.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+            var grupoPortal = portal.gameObject.AddComponent<CanvasGroup>();
+            grupoPortal.alpha = 0f;
+            grupoPortal.blocksRaycasts = false;
+            grupoPortal.interactable = false;
+            // "Arte" es lo que se ve dentro: por defecto, penumbra con una luz cálida al fondo. Asigna
+            // el arte de cada capítulo en ChapterSelectView > Visuales y lo reemplaza al entrar.
+            var arte = SceneBuilderUtils.CrearImage("Arte", portal.transform, new Color(0.10f, 0.02f, 0.02f, 1f));
+            SceneBuilderUtils.Estirar(arte.rectTransform);
+            if (spriteHalo != null)
+            {
+                var luz = SceneBuilderUtils.CrearImage("Luz", portal.transform, new Color(1f, 0.78f, 0.45f, 0.85f), spriteHalo);
+                SceneBuilderUtils.Colocar(luz.rectTransform, Vector2.zero, tamanoReloj * 1.1f);
+            }
+
+            // ---------- Reloj = puerta: gira sobre su borde izquierdo (pivot en la bisagra) ----------
+            var reloj = SceneBuilderUtils.CrearRect("ClockGroup", escenario);
+            reloj.pivot = new Vector2(0f, 0.5f);
+            SceneBuilderUtils.Colocar(reloj, new Vector2(-TamanoReloj * 0.5f, 0f), tamanoReloj);
             var grupoReloj = reloj.gameObject.AddComponent<CanvasGroup>();
 
-            var tamanoReloj = new Vector2(TamanoReloj, TamanoReloj);
             var spriteLineas = CargarSprite("esfera_reloj");
             if (spriteLineas != null)
             {
@@ -122,45 +157,36 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
                 SceneBuilderUtils.Colocar(centro.rectTransform, Vector2.zero, new Vector2(60f, 60f));
             }
 
-            // ---------- Boxes de información ----------
-            var panelInfo = CrearPanelInfo(reloj);
+            // ---------- Boxes de información (fuera de la puerta: no giran con ella) ----------
+            var panelInfo = CrearPanelInfo(raiz);
+            var grupoInfo = panelInfo.gameObject.AddComponent<CanvasGroup>();
 
-            // ---------- Capa de la puerta (desactivada al inicio, encima del reloj) ----------
-            var capa = SceneBuilderUtils.CrearRect("DoorLayer", raiz);
-            SceneBuilderUtils.Estirar(capa);
+            // Volver: debajo del fundido, para que aparezca y desaparezca con el resto.
+            var botonVolver = CrearBotonVolver(raiz);
+            var grupoVolver = botonVolver.gameObject.AddComponent<CanvasGroup>();
 
-            var resplandor = SceneBuilderUtils.CrearImage("PortalGlow", capa, SceneBuilderUtils.Dorado, SceneBuilderUtils.SpriteCirculo());
-            SceneBuilderUtils.Colocar(resplandor.rectTransform, Vector2.zero, new Vector2(1400f, 1400f));
-            var cr = resplandor.color; cr.a = 0f; resplandor.color = cr;
-
-            var portal = SceneBuilderUtils.CrearImage("Portal", capa, Color.white, SceneBuilderUtils.SpriteCirculo());
-            SceneBuilderUtils.Colocar(portal.rectTransform, Vector2.zero, new Vector2(700f, 700f));
-            portal.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            var arte = SceneBuilderUtils.CrearImage("Arte", portal.transform, new Color(0.35f, 0.02f, 0.03f, 1f));
-            SceneBuilderUtils.Estirar(arte.rectTransform);
-
-            var puertaIzq = CrearPuerta(capa, "PuertaIzquierda", true);
-            var puertaDer = CrearPuerta(capa, "PuertaDerecha", false);
-
-            var fundido = SceneBuilderUtils.CrearImage("FundidoFinal", capa, Color.black);
+            // ---------- Fundido final (encima de todo) ----------
+            var fundido = SceneBuilderUtils.CrearImage("FundidoFinal", raiz, Color.black);
             SceneBuilderUtils.Estirar(fundido.rectTransform);
             var grupoFundido = fundido.gameObject.AddComponent<CanvasGroup>();
             grupoFundido.alpha = 0f;
             grupoFundido.blocksRaycasts = false;
             grupoFundido.interactable = false;
 
-            capa.gameObject.SetActive(false);
-
             // ---------- Lógica ----------
             var logica = new GameObject("ChapterSelectLogic");
             var transicion = logica.AddComponent<ClockDoorTransitionView>();
-            SceneBuilderUtils.Asignar(transicion, "_grupoReloj", grupoReloj);
-            SceneBuilderUtils.Asignar(transicion, "_capaRaiz", capa.gameObject);
-            SceneBuilderUtils.Asignar(transicion, "_puertaIzquierda", puertaIzq);
-            SceneBuilderUtils.Asignar(transicion, "_puertaDerecha", puertaDer);
+            SceneBuilderUtils.Asignar(transicion, "_puerta", reloj);
+            SceneBuilderUtils.Asignar(transicion, "_grupoPuerta", grupoReloj);
             SceneBuilderUtils.Asignar(transicion, "_portal", portal.rectTransform);
+            SceneBuilderUtils.Asignar(transicion, "_grupoPortal", grupoPortal);
             SceneBuilderUtils.Asignar(transicion, "_imagenPortal", arte);
             SceneBuilderUtils.Asignar(transicion, "_resplandorPortal", resplandor);
+            SceneBuilderUtils.Asignar(transicion, "_escenario", escenario);
+            SceneBuilderUtils.Asignar(transicion, "_grupoInfo", grupoInfo);
+            SceneBuilderUtils.Asignar(transicion, "_grupoVolver", grupoVolver);
+            SceneBuilderUtils.AsignarFloat(transicion, "_tiempoEntrada", 2.4f);
+            SceneBuilderUtils.AsignarFloat(transicion, "_escalaInicialEntrada", 0.4f);
             SceneBuilderUtils.Asignar(transicion, "_fundidoFinal", grupoFundido);
 
             var vistaGo = SceneBuilderUtils.CrearRect("ChapterSelectView", raiz).gameObject;
@@ -171,6 +197,7 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             SceneBuilderUtils.Asignar(vista, "_manillaMinutero", minutero);
             SceneBuilderUtils.Asignar(vista, "_panelInfo", panelInfo);
             SceneBuilderUtils.Asignar(vista, "_transicionPuerta", transicion);
+            SceneBuilderUtils.Asignar(vista, "_botonVolver", botonVolver);
 
             var installer = logica.AddComponent<ChapterSelectInstaller>();
             SceneBuilderUtils.Asignar(installer, "_view", vista);
@@ -220,24 +247,36 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
         private static void AsignarColor(Object objetivo, string campo, Color valor) =>
             SceneBuilderUtils.AsignarColor(objetivo, campo, valor);
 
-        private static RawImage CrearPuerta(Transform padre, string nombre, bool izquierda)
+        /// <summary>Botón "Volver" con la flecha de las manillas, abajo a la izquierda.</summary>
+        private static BotonSimpleView CrearBotonVolver(Transform padre)
         {
-            var rt = SceneBuilderUtils.CrearRect(nombre, padre);
-            rt.anchorMin = izquierda ? new Vector2(0f, 0f) : new Vector2(0.5f, 0f);
-            rt.anchorMax = izquierda ? new Vector2(0.5f, 1f) : new Vector2(1f, 1f);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            rt.pivot = izquierda ? new Vector2(0f, 0.5f) : new Vector2(1f, 0.5f);   // bisagra en el borde exterior
-            var raw = rt.gameObject.AddComponent<RawImage>();
-            raw.color = Color.black;
-            raw.raycastTarget = false;
-            return raw;
+            var rt = SceneBuilderUtils.CrearRect("BotonVolver", padre);
+            SceneBuilderUtils.Colocar(rt, new Vector2(-760f, -470f), new Vector2(300f, 90f));
+            var area = rt.gameObject.AddComponent<Image>();
+            area.color = new Color(0, 0, 0, 0);
+            area.raycastTarget = true;
+
+            var graficos = new List<Graphic>();
+            var flecha = SceneBuilderUtils.CargarSprite("Assets/Art/UI/flecha_volver.png");
+            if (flecha != null)
+            {
+                var icono = SceneBuilderUtils.CrearImage("Flecha", rt, Color.white, flecha);
+                SceneBuilderUtils.Colocar(icono.rectTransform, new Vector2(-80f, 0f), new Vector2(108f, 60f));
+                graficos.Add(icono);
+            }
+            var texto = SceneBuilderUtils.CrearTexto("Texto", rt, "Volver", 40f, Color.white);
+            SceneBuilderUtils.Colocar(texto.rectTransform, new Vector2(50f, 0f), new Vector2(180f, 70f));
+            graficos.Add(texto);
+
+            var boton = rt.gameObject.AddComponent<BotonSimpleView>();
+            SceneBuilderUtils.AsignarLista(boton, "_graficos", graficos);
+            return boton;
         }
 
         private static ChapterInfoPanelView CrearPanelInfo(Transform padre)
         {
             var panel = SceneBuilderUtils.CrearRect("InfoPanel", padre);
-            SceneBuilderUtils.Colocar(panel, new Vector2(640f, 0f), new Vector2(460f, 520f));
+            SceneBuilderUtils.Colocar(panel, new Vector2(740f, 0f), new Vector2(420f, 520f));   // fuera del anillo del reloj
             var vista = panel.gameObject.AddComponent<ChapterInfoPanelView>();
 
             string[] campos = { "Titulo", "Dificultad", "Llaves", "Tiempo" };
@@ -247,10 +286,25 @@ namespace UniversalPlatform.Features.ChapterSelect.Editor
             for (int i = 0; i < 4; i++)
             {
                 var caja = SceneBuilderUtils.CrearImage($"Caja_{campos[i]}", panel, new Color(0f, 0f, 0f, 0.8f));
-                SceneBuilderUtils.Colocar(caja.rectTransform, new Vector2(0f, ys[i]), new Vector2(460f, 110f));
+                SceneBuilderUtils.Colocar(caja.rectTransform, new Vector2(0f, ys[i]), new Vector2(420f, 110f));
                 cajas[i] = caja.gameObject.AddComponent<CanvasGroup>();
                 textos[i] = SceneBuilderUtils.CrearTexto("Texto", caja.transform, campos[i], 44f, Color.white);
                 SceneBuilderUtils.Estirar(textos[i].rectTransform);
+
+                // Cajas de llaves y de tiempo: un ícono pixel art a la izquierda del texto.
+                string rutaIcono = i == 2 ? "Assets/Art/Props/llave.png" : i == 3 ? "Assets/Art/Props/cronometro.png" : null;
+                if (rutaIcono != null)
+                {
+                    var spriteIcono = SceneBuilderUtils.CargarSprite(rutaIcono, true);
+                    if (spriteIcono != null)
+                    {
+                        bool esTiempo = i == 3;      // el tiempo es más largo que "0/3": ícono más a la izquierda
+                        var icono = SceneBuilderUtils.CrearImage(esTiempo ? "IconoCronometro" : "IconoLlave", caja.transform, Color.white, spriteIcono);
+                        SceneBuilderUtils.Colocar(icono.rectTransform, new Vector2(esTiempo ? -125f : -55f, 0f), new Vector2(60f, 60f));
+                        icono.preserveAspect = true;
+                        textos[i].rectTransform.offsetMin = new Vector2(esTiempo ? 60f : 80f, 0f);
+                    }
+                }
             }
 
             SceneBuilderUtils.Asignar(vista, "_cajaTitulo", cajas[0]);

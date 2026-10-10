@@ -28,6 +28,31 @@ namespace UniversalPlatform.Shared.Editor
             return canvas;
         }
 
+        /// <summary>
+        /// Canvas en "Screen Space - Camera" con una cámara en perspectiva. Se ve igual que uno
+        /// Overlay mientras todo está plano, pero los elementos que giran en 3D (la puerta del reloj)
+        /// se dibujan con perspectiva real.
+        /// </summary>
+        public static Canvas CrearCanvasConCamara(string nombre)
+        {
+            var camaraGo = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
+            camaraGo.tag = "MainCamera";
+            camaraGo.transform.position = new Vector3(0f, 0f, -10f);
+            var camara = camaraGo.GetComponent<Camera>();
+            camara.orthographic = false;
+            camara.fieldOfView = 50f;
+            camara.nearClipPlane = 0.1f;
+            camara.farClipPlane = 200f;
+            camara.clearFlags = CameraClearFlags.SolidColor;
+            camara.backgroundColor = Color.black;
+
+            var canvas = CrearCanvas(nombre);
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = camara;
+            canvas.planeDistance = 10f;
+            return canvas;
+        }
+
         public static RectTransform CrearRect(string nombre, Transform padre)
         {
             var go = new GameObject(nombre, typeof(RectTransform));
@@ -81,7 +106,8 @@ namespace UniversalPlatform.Shared.Editor
         /// Unity lo importó como textura normal o como sprite múltiple, lo reimporta como sprite
         /// único. Devuelve null, avisando por consola, si el archivo no existe.
         /// </summary>
-        public static Sprite CargarSprite(string ruta)
+        /// <param name="pixelArt">true para pixel art: sin suavizado al agrandar (filtro Point) y sin compresión.</param>
+        public static Sprite CargarSprite(string ruta, bool pixelArt = false)
         {
             var importer = AssetImporter.GetAtPath(ruta) as TextureImporter;
             if (importer == null)
@@ -90,18 +116,36 @@ namespace UniversalPlatform.Shared.Editor
                 return null;
             }
 
-            if (importer.textureType != TextureImporterType.Sprite
+            bool cambiar = importer.textureType != TextureImporterType.Sprite
                 || importer.spriteImportMode != SpriteImportMode.Single
-                || importer.mipmapEnabled)
+                || importer.mipmapEnabled;
+            if (pixelArt)
+                cambiar |= importer.filterMode != FilterMode.Point
+                    || importer.textureCompression != TextureImporterCompression.Uncompressed;
+
+            if (cambiar)
             {
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
                 importer.alphaIsTransparency = true;
                 importer.mipmapEnabled = false;
+                if (pixelArt)
+                {
+                    importer.filterMode = FilterMode.Point;
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                }
                 importer.SaveAndReimport();
             }
 
-            return AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
+            if (sprite == null)
+            {
+                // Por si quedó como sprite múltiple: se usa el primero que tenga.
+                foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(ruta))
+                    if (asset is Sprite s) { sprite = s; break; }
+            }
+            if (sprite == null) Debug.LogWarning($"[SceneBuilder] '{ruta}' existe pero no se pudo cargar como Sprite.");
+            return sprite;
         }
 
         public static void AsignarColor(Object objetivo, string campo, Color valor)

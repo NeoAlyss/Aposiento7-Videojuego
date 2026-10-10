@@ -50,5 +50,11 @@ namespace UniversalPlatform.Features.Progress.Data
             _localDataSource.CrearVacia(numero);
             RanuraActiva.Numero = numero;
         }
+
+        public void BorrarPartida(int numero)
+        {
+            if (!ReglasRanuras.EsNumeroValido(numero)) return;
+            _localDataSource.Borrar(numero);
+        }
     }
 }

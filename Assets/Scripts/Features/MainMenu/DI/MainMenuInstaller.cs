@@ -44,7 +44,8 @@ namespace UniversalPlatform.Features.MainMenu.DI
                 _vistaPartidas.Construir(new LoadGameViewModel(
                     new ObtenerRanurasUseCase(ranuras),
                     new CargarRanuraUseCase(ranuras),
-                    new IniciarPartidaEnRanuraUseCase(ranuras)));
+                    new IniciarPartidaEnRanuraUseCase(ranuras),
+                    new BorrarRanuraUseCase(ranuras)));
             }
         }
     }

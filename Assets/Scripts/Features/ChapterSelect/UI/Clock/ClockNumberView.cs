@@ -27,9 +27,23 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
         private bool _resaltado, _bloqueado;
         private float _t;
         private Vector3 _escalaBase;
+        private bool _iniciado;
 
         private void Awake()
         {
+            Iniciar();
+            Aplicar(_t);
+        }
+
+        /// <summary>
+        /// El Installer puede llamar a SetBloqueado antes de que corra este Awake (Unity no garantiza
+        /// el orden entre objetos). Por eso la escala original se captura la primera vez que hace
+        /// falta, no solo en Awake: si no, quedaría en cero y el número desaparecería.
+        /// </summary>
+        private void Iniciar()
+        {
+            if (_iniciado) return;
+            _iniciado = true;
             _escalaBase = transform.localScale;
 
             // Garantiza un área que reciba el mouse aunque el número sea solo un TMP pequeño.
@@ -39,7 +53,6 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
                 area.color = new Color(0, 0, 0, 0);
                 area.raycastTarget = true;
             }
-            Aplicar(0f);
         }
 
         public void Construir(int numero, Action<int> alEntrar, Action<int> alClic)
@@ -67,6 +80,7 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
 
         private void Aplicar(float t)
         {
+            Iniciar();
             float e = Mathf.SmoothStep(0f, 1f, t);
             var a = _bloqueado ? _colorBloqueado : _colorNormal;
             var b = _bloqueado ? _colorBloqueadoIluminado : _colorIluminado;

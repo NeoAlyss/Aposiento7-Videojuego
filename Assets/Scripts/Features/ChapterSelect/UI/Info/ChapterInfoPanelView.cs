@@ -37,9 +37,22 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Info
         private Vector2[] _posicionesBase;
         private Vector2 _posicionRaizBase;
         private Coroutine _rutina;
+        private bool _iniciado;
 
         private void Awake()
         {
+            Iniciar();
+        }
+
+        /// <summary>
+        /// Mostrar puede llegar antes que este Awake (lo llama el Installer desde su propio Awake y
+        /// Unity no garantiza el orden). Las posiciones base se capturan la primera vez que hacen
+        /// falta; si no, el panel quedaría centrado sobre el reloj.
+        /// </summary>
+        private void Iniciar()
+        {
+            if (_iniciado) return;
+            _iniciado = true;
             _cajas = new[] { _cajaTitulo, _cajaDificultad, _cajaLlaves, _cajaTiempo };
             _posicionesBase = new Vector2[_cajas.Length];
             for (int i = 0; i < _cajas.Length; i++)
@@ -53,6 +66,7 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Info
 
         public void Mostrar(DetalleCapitulo detalle, bool numeroEnLadoDerecho)
         {
+            Iniciar();
             if (_raizPanel != null && _reflejarAlLadoOpuesto)
             {
                 float lado = numeroEnLadoDerecho ? -1f : 1f;      // va al lado contrario del número
@@ -104,6 +118,7 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Info
         /// <summary>Pequeño temblor al intentar entrar a un capítulo bloqueado.</summary>
         public void Temblar()
         {
+            Iniciar();
             if (_raizPanel != null) StartCoroutine(TemblarRutina());
         }
 
