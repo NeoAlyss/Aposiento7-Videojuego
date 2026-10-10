@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -322 140 252" width="140" height="252"><g fill="#fff" stroke="none">
+<rect x="-6" y="-225" width="12" height="118"/>
+<path d="M0,-310 C26,-268 34,-242 0,-212 C-34,-242 -26,-268 0,-310Z"/>
+<circle cx="-22" cy="-236" r="8"/><circle cx="22" cy="-236" r="8"/>
+<path d="M 0,-195 C -30,-195 -50,-216 -44,-240 C -40,-254 -22,-250 -22,-236" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+<path d="M 0,-195 C 30,-195 50,-216 44,-240 C 40,-254 22,-250 22,-236" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+<path fill-rule="evenodd" d="M0,-150 L20,-118 L0,-86 L-20,-118Z M0,-134 L9,-118 L0,-102 L-9,-118Z"/>
+</g></svg>

@@ -1,0 +1,25 @@
+{
+    "name": "UniversalPlatform.Features.MainMenu.Tests.Editor",
+    "rootNamespace": "UniversalPlatform.Features.MainMenu.Tests.Editor",
+    "references": [
+        "UniversalPlatform.Features.MainMenu",
+        "UniversalPlatform.Features.Progress",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
