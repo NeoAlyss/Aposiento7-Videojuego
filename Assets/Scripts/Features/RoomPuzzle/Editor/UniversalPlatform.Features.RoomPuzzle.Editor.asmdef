@@ -1,0 +1,23 @@
+{
+    "name": "UniversalPlatform.Features.RoomPuzzle.Editor",
+    "rootNamespace": "UniversalPlatform.Features.RoomPuzzle.Editor",
+    "references": [
+        "UniversalPlatform.Shared",
+        "UniversalPlatform.Shared.Editor",
+        "UniversalPlatform.Features.RoomPuzzle",
+        "UniversalPlatform.Features.Progress",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -4,8 +4,10 @@ using UniversalPlatform.Features.Progress.Domain;
 namespace UniversalPlatform.Features.Progress.Presentation.ChapterTimer
 {
     /// <summary>
-    /// Acumula el tiempo jugado en memoria y lo persiste cada cierto intervalo (y al finalizar),
-    /// para no escribir el archivo en cada frame.
+    /// Cronómetro de un capítulo. En pantalla muestra el tiempo de ESTE intento (siempre parte en
+    /// 0 al entrar), pero en la partida guardada suma todo lo jugado en el capítulo (lo que se ve
+    /// como "tiempo de partida" en las velas). Persiste cada cierto intervalo y al finalizar, para
+    /// no escribir el archivo en cada frame.
     /// </summary>
     public class ChapterTimerViewModel
     {
@@ -17,7 +19,8 @@ namespace UniversalPlatform.Features.Progress.Presentation.ChapterTimer
 
         private string _idCapitulo;
         private int _llaves;
-        private float _segundos;
+        private float _segundos;          // total guardado del capítulo
+        private float _segundosIntento;   // lo que va de esta entrada al capítulo
         private bool _completado;
         private float _pendiente;         // segundos aún no persistidos
         private float _desdeUltimoGuardado;
@@ -45,6 +48,7 @@ namespace UniversalPlatform.Features.Progress.Presentation.ChapterTimer
             var progreso = _obtenerProgreso.Ejecutar(idCapitulo);
             _llaves = progreso.Llaves;
             _segundos = progreso.SegundosJugados;
+            _segundosIntento = 0f;
             _completado = progreso.Completado;
             _pendiente = 0f;
             _desdeUltimoGuardado = 0f;
@@ -55,13 +59,14 @@ namespace UniversalPlatform.Features.Progress.Presentation.ChapterTimer
         {
             if (_idCapitulo == null || delta <= 0f || float.IsNaN(delta)) return;
 
-            int segundoAntes = (int)_segundos;
+            int segundoAntes = (int)_segundosIntento;
             _segundos += delta;
+            _segundosIntento += delta;
             _pendiente += delta;
             _desdeUltimoGuardado += delta;
 
             if (_desdeUltimoGuardado >= _intervaloGuardado) GuardarPendiente();
-            if ((int)_segundos != segundoAntes) Publicar();
+            if ((int)_segundosIntento != segundoAntes) Publicar();
         }
 
         public void AgregarLlave(int cantidad = 1)
@@ -104,8 +109,9 @@ namespace UniversalPlatform.Features.Progress.Presentation.ChapterTimer
                 idCapitulo: _idCapitulo,
                 llaves: _llaves,
                 segundosJugados: _segundos,
-                tiempoFormateado: ReglasProgreso.FormatearTiempo(_segundos),
-                completado: _completado
+                tiempoFormateado: ReglasProgreso.FormatearTiempo(_segundosIntento),
+                completado: _completado,
+                segundosIntento: _segundosIntento
             );
             OnStateChanged?.Invoke(EstadoActual);
         }

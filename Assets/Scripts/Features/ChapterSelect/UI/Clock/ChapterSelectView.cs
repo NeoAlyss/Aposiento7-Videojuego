@@ -41,6 +41,8 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
         [Header("Otros componentes")]
         [SerializeField] private ChapterInfoPanelView _panelInfo;
         [SerializeField] private ClockDoorTransitionView _transicionPuerta;
+        [Tooltip("Botón para volver al menú principal (lo mismo que Escape).")]
+        [SerializeField] private BotonSimpleView _botonVolver;
         [SerializeField] private CapituloVisual[] _visuales;
 
         [Header("Navegación")]
@@ -59,11 +61,13 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
         private float _valorHoraria, _valorMinutero, _velHoraria, _velMinutero;
         private float _suavizado;
         private bool _ocupado;
+        private bool _enVolver;          // el foco del teclado está en el botón Volver
 
         /// <param name="cargarEscena">Inyectable para tests; por defecto SceneManager.LoadScene.</param>
         public void Construir(ChapterSelectViewModel viewModel, Action<string> cargarEscena = null)
         {
             _viewModel = viewModel;
+            if (_botonVolver != null) _botonVolver.Construir(AlClicVolver);
             _cargarEscena = cargarEscena ?? (escena => SceneManager.LoadScene(escena));
             _suavizado = _tiempoSuavizado;
 
@@ -99,18 +103,51 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
         private void Update()
         {
             AnimarManillas();
-            if (_viewModel == null || _ocupado) return;
+            if (_viewModel == null || Bloqueada) return;
 
-            if (MenuInput.Derecha || MenuInput.Abajo) _viewModel.Mover(+1);
+            // Con el foco en Volver: Enter vuelve al menú; arriba, izquierda o derecha regresan al reloj.
+            if (_enVolver)
+            {
+                if (MenuInput.Confirmar || MenuInput.Cancelar) _viewModel.Cancelar();
+                else if (MenuInput.Arriba || MenuInput.Izquierda || MenuInput.Derecha) FocoEnVolver(false);
+                return;
+            }
+
+            // En el reloj: izquierda/derecha (y arriba) recorren los números; abajo baja a Volver.
+            if (MenuInput.Derecha) _viewModel.Mover(+1);
             else if (MenuInput.Izquierda || MenuInput.Arriba) _viewModel.Mover(-1);
+            else if (MenuInput.Abajo)
+            {
+                if (_botonVolver != null) FocoEnVolver(true);
+                else _viewModel.Mover(+1);
+            }
             else if (MenuInput.Confirmar) _viewModel.Confirmar();
             else if (MenuInput.Cancelar) _viewModel.Cancelar();
         }
 
         // ---------- mouse (los números llaman aquí) ----------
 
-        private void AlEntrarNumero(int numero) { if (_viewModel != null && !_ocupado) _viewModel.Seleccionar(numero); }
-        private void AlClicNumero(int numero) { if (_viewModel != null && !_ocupado) _viewModel.ConfirmarNumero(numero); }
+        private void AlEntrarNumero(int numero)
+        {
+            if (_viewModel == null || Bloqueada) return;
+            FocoEnVolver(false);
+            _viewModel.Seleccionar(numero);
+        }
+
+        private void FocoEnVolver(bool enVolver)
+        {
+            _enVolver = enVolver;
+            if (_botonVolver != null) _botonVolver.SetResaltado(enVolver);
+            // Mientras el foco está en Volver, el número del reloj se apaga para que no haya dos marcados.
+            var estado = _viewModel != null ? _viewModel.EstadoActual : null;
+            if (estado == null) return;
+            for (int i = 0; i < _numeros.Length && i < ReglasReloj.CANTIDAD_NUMEROS; i++)
+                if (_numeros[i] != null) _numeros[i].SetResaltado(!enVolver && i + 1 == estado.NumeroSeleccionado);
+        }
+        private void AlClicNumero(int numero) { if (_viewModel != null && !Bloqueada) _viewModel.ConfirmarNumero(numero); }
+
+        /// <summary>Ocupada en una transición, o el reloj todavía está apareciendo.</summary>
+        private bool Bloqueada => _ocupado || (_transicionPuerta != null && _transicionPuerta.EnEntrada);
 
         // ---------- reacción al ViewModel ----------
 
@@ -120,7 +157,7 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
             {
                 if (_numeros[i] == null) continue;
                 _numeros[i].SetBloqueado(estado.BloqueadosPorNumero[i]);
-                _numeros[i].SetResaltado(i + 1 == estado.NumeroSeleccionado);
+                _numeros[i].SetResaltado(!_enVolver && i + 1 == estado.NumeroSeleccionado);
             }
 
             _objetivoHoraria = estado.AnguloHorariaObjetivo;
@@ -155,6 +192,11 @@ namespace UniversalPlatform.Features.ChapterSelect.UI.Clock
         {
             _alIntentarEntrarBloqueado?.Invoke();
             if (_panelInfo != null) _panelInfo.Temblar();
+        }
+
+        private void AlClicVolver()
+        {
+            if (_viewModel != null && !Bloqueada) _viewModel.Cancelar();
         }
 
         private void VolverAlMenu()
